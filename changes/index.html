@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111619">
+  <title>Uutta GymTrackerissa · GymTracker</title>
+  <style>
+    :root { color-scheme: dark; --bg:#111619; --surface:#1a2326; --line:#344547; --ink:#f5f8f8; --muted:#bccbcb; --accent:#7de5d6; --brand:#36a99e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:1rem/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    a { color:var(--accent); }
+    button,select { font:inherit; }
+    a:focus-visible,select:focus-visible,summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+    .wrap { width:min(100% - 2rem, 66rem); margin-inline:auto; }
+    .skip { position:absolute; top:0; left:1rem; transform:translateY(-120%); padding:.5rem .8rem; background:var(--ink); color:var(--bg); z-index:2; }
+    .skip:focus { transform:translateY(0); }
+    header { border-bottom:1px solid var(--line); }
+    .header-row { min-height:4.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem 1rem; padding-block:.65rem; }
+    .brand { display:flex; align-items:center; gap:.55rem; font-size:1.35rem; font-weight:750; letter-spacing:-.045em; white-space:nowrap; }
+    .brand svg { color:var(--accent); width:1.6rem; height:1.6rem; }
+    .brand strong { color:var(--accent); }
+    .language { display:flex; gap:.55rem; align-items:center; min-width:0; flex-wrap:wrap; }
+    .language label { font-size:.85rem; color:var(--muted); }
+    select { background:var(--surface); color:var(--ink); padding:.45rem .65rem; border:1px solid var(--line); border-radius:.55rem; min-height:2.75rem; max-width:100%; }
+    .hero { margin:clamp(.75rem,2.5vw,1.75rem) 0 clamp(1.3rem,4vw,2.5rem); padding:clamp(.9rem,3vw,1.85rem); border:1px solid var(--line); border-radius:1.15rem; background:radial-gradient(ellipse at 94% 12%,#254441 0%,transparent 65%),var(--surface); }
+    .kicker { color:var(--accent); font-weight:700; font-size:.83rem; letter-spacing:.04em; margin:0 0 .35rem; }
+    h1,h2,h3 { overflow-wrap:anywhere; text-wrap:balance; line-height:1.18; }
+    h1 { font-size:clamp(1.85rem,6vw,3.55rem); letter-spacing:-.05em; margin:0 0 .75rem; }
+    .highlights { list-style:none; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.6rem; margin:0 0 .8rem; padding:0; }
+    .highlights li { padding:.65rem .8rem; border-inline-start:2px solid var(--brand); background:#1116196b; border-radius:.3rem; min-width:0; }
+    .highlights h2 { font-size:1rem; margin:0 0 .25rem; letter-spacing:0; }
+    .highlights p { font-size:.92rem; line-height:1.42; margin:0; color:var(--muted); }
+    .subscription-link { display:inline-flex; align-items:center; gap:.5rem; min-height:2.75rem; padding:.5rem .85rem; color:var(--bg); background:var(--accent); border-radius:.65rem; font-weight:720; line-height:1.3; text-decoration:none; }
+    .subscription-link:hover { text-decoration:underline; }
+    figure { margin:0; text-align:center; }
+    .phone { width:min(100%,13.75rem); aspect-ratio:4/5; margin-inline:auto; overflow:hidden; background:#101216; border:1px solid #587671; border-radius:.9rem; box-shadow:0 12px 25px #0b181a99; }
+    .phone img { display:block; width:100%; height:auto; margin-top:-12%; }
+    figcaption { margin-top:.4rem; color:var(--muted); font-size:.76rem; }
+    main > #sections > section { scroll-margin-top:1rem; margin:0 0 clamp(1.55rem,5vw,2.8rem); }
+    section > h2 { font-size:clamp(1.45rem,4vw,2.15rem); margin:0 0 .75rem; letter-spacing:-.035em; }
+    h3 { font-size:1.12rem; margin:0 0 .45rem; }
+    .panel { background:var(--surface); border:1px solid var(--line); border-radius:1rem; padding:clamp(.85rem,2.5vw,1.4rem); min-width:0; }
+    .panel p, details p { color:var(--muted); margin:.4rem 0 0; max-width:72ch; }
+    .panel p:first-child { margin-top:0; }
+    .stack { display:grid; gap:.55rem; }
+    details { border:1px solid var(--line); border-radius:.75rem; background:var(--surface); min-width:0; }
+    summary { display:flex; align-items:center; justify-content:space-between; gap:.65rem; min-height:3rem; padding:.65rem .9rem; font-weight:680; line-height:1.3; cursor:pointer; list-style:none; overflow-wrap:anywhere; }
+    summary::-webkit-details-marker { display:none; }
+    summary::after { content:"+"; color:var(--accent); font-size:1.25rem; flex-shrink:0; }
+    details[open] summary::after { content:"−"; }
+    details p, .panel details p { margin:0; padding:0 .9rem .8rem; }
+    .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; }
+    .key-answers { margin-bottom:.65rem; }
+    .key-answers .panel { border-inline-start:3px solid var(--brand); }
+    .key-answers p { font-size:.94rem; line-height:1.5; }
+    .features { gap:.75rem; }
+    .feature { scroll-margin-top:1rem; }
+    .feature details { margin-top:.75rem; }
+    .feature .path { color:var(--accent); font-weight:650; overflow-wrap:anywhere; }
+    .feature-with-image { display:grid; grid-template-columns:minmax(0,1fr) minmax(10rem,14rem); gap:1rem; align-items:start; }
+    footer { border-top:1px solid var(--line); padding-block:1.15rem 2rem; color:var(--muted); }
+    .footer-row { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.6rem 1rem; }
+    @media (max-width:41rem) {
+      .header-row { min-height:3.75rem; padding-block:.4rem; gap:.45rem; }
+      .brand { font-size:1.2rem; }
+      .language label { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+      .language select { max-width:min(45vw,12rem); }
+      .highlights, .cards, .feature-with-image { grid-template-columns:minmax(0,1fr); }
+      .highlights { gap:.35rem; }
+      .highlights li { padding:.4rem .65rem; }
+      .feature-with-image figure { justify-self:center; width:min(100%,13.75rem); }
+    }
+    @media print {
+      :root { color-scheme:light; --bg:#fff; --surface:#fff; --ink:#111; --muted:#333; --line:#bbb; --accent:#175b55; --brand:#175b55; }
+      .hero { background:#fff; }
+      .subscription-link, .language, figure, footer, .skip { display:none; }
+      .wrap { width:100%; }
+      details, .panel { break-inside:avoid; }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip" id="skip" href="#content">Siirry sisältöön</a>
+  <header>
+    <div class="wrap header-row">
+      <div class="brand" aria-label="GymTracker">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m8 8 8 8M5 7l2-2m10 14 2-2M3 5l2-2m14 18 2-2M5 9l4-4m6 14 4-4"/></svg>
+        <span>Gym<strong>Tracker</strong></span>
+      </div>
+      <div class="language">
+        <label id="language-label" for="language">Kieli</label>
+        <select id="language"><option value="fi" lang="fi" selected>Suomi</option><option value="en" lang="en">English</option><option value="sv" lang="sv">Svenska</option><option value="et" lang="et">Eesti</option><option value="es" lang="es">Español</option><option value="de" lang="de">Deutsch</option><option value="it" lang="it">Italiano</option><option value="fr" lang="fr">Français</option><option value="pt-PT" lang="pt-PT">Português (Portugal)</option><option value="pl" lang="pl">Polski</option></select>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" id="content">
+    <div class="hero">
+      <p class="kicker" id="eyebrow">Ennakkotieto · Päivitys tulossa</p>
+      <h1 id="title">Uutta GymTrackerissa</h1>
+      <ul class="highlights" id="highlights">
+<li><h2>Valmentajan viikkopalaute</h2><p>Valmentaja tarkastelee treenejäsi pidemmällä aikavälillä ja antaa yhden painopisteen seuraavalle jaksolle.</p></li>
+<li><h2>Muut treenit ja GPS</h2><p>Kävelyt, juoksut ja pyöräilyt tulevat samaan historiaan, ja tuetuissa ulkolajeissa voit tallentaa GPS-reitin.</p></li>
+<li><h2>Sujuvampi treenin kirjaus</h2><p>Oma numeronäppäimistö helpottaa kirjaamista ja voit vaihtaa treenissä näkyviä mittareita.</p></li>
+      </ul>
+      <a class="subscription-link" href="#subscription"><span id="subscription-link-text">Miten tilausmalli vaikuttaa minuun?</span><span aria-hidden="true">↓</span></a>
+    </div>
+    <div id="sections" data-language="fi">
+<section id="subscription" aria-labelledby="subscription-title">
+<h2 id="subscription-title">Mitä tilausmalli tarkoittaa minulle?</h2>
+<div class="cards key-answers">
+<div class="panel"><h3>Treenihistoria pysyy luettavissa</h3><p>Voit katsella treenihistoriaasi myös kokeilun tai tilauksen päätyttyä.</p></div>
+<div class="panel"><h3>Peruskirjaus vanhalla asennuksella</h3><p>Siirtymäpäivityksen aikaan mainoksellista ilmaisversiota käyttäneet voivat jatkaa salitreenien peruskirjausta alkuperäisellä asennuksella. Oikeus ei siirry uudelleenasennuksessa eikä puhelimen vaihdossa.</p></div>
+</div>
+<div class="stack">
+<details id="paid"><summary><span>Minulla on tilaus tai Lifetime-oikeus</span></summary>
+<p>Voimassa oleva tilauksesi tai Lifetime-oikeutesi säilyy. Jos osto ei näy, palauta ostot Tilaus-näkymässä samalla Google Play -tilillä, jolla teit oston.</p></details>
+<details id="legacy-free"><summary><span>Käytän vanhaa ilmaista versiota</span></summary>
+<p>Vain siirtymäpäivityksen aikaan FREE-tilaa mainoksilla käyttäneet vanhat asennukset säilyttävät salitreenien peruskirjaamisen mainoksilla. Oikeus säilyy sovelluspäivityksissä, mutta ei siirry varmuuskopion, uudelleenasennuksen, sovellustietojen tyhjennyksen tai puhelimen vaihdon mukana. Tilaus avaa kaikki ominaisuudet; sen päätyttyä säilynyt ilmaisoikeus jatkuu alkuperäisessä asennuksessa.</p></details>
+<details id="legacy-trial"><summary><span>Aiempi kokeiluni on vielä voimassa</span></summary>
+<p>Aiempi paikallinen kokeilu jatkuu alkuperäiseen päättymispäivään. Sen jälkeen tarvitset voimassa olevan käyttöoikeuden uuden treenin aloittamiseen. Päivitys ei aloita uutta kokeilua.</p></details>
+<details id="new-plan"><summary><span>Olen uusi käyttäjä tai haluan tilata</span></summary>
+<p>Valitse kuukausi- tai vuositilaus. Google Play näyttää hinnan ja mahdollisen kokeilutarjouksen ennen kuin hyväksyt tilauksen.</p>
+<p>Tilaus uusiutuu automaattisesti näytetyllä hinnalla, ellet peru sitä Google Playssa.</p>
+<p>30 päivän maksuton kokeilu tarjotaan siihen oikeutetuille. Peru kokeilun aikana Google Playssa välttääksesi ensimmäisen maksun.</p></details>
+<details id="history-backups"><summary><span>Historia ja varmuuskopiot</span></summary>
+<p>Kokeilun tai tilauksen päätyttyä voit katsella treenihistoriaasi sekä viedä ja palauttaa varmuuskopion käsin. Uusi harjoittelu edellyttää voimassa olevaa tilausta, ellei sinulla ole aiempaa voimassa olevaa käyttöoikeutta. Tilauksen peruminen säilyttää käyttöoikeuden myönnetyn kauden loppuun. Voit tehdä jo käynnissä olevan harjoituksen loppuun.</p></details>
+</div>
+</section>
+<section id="features" aria-labelledby="features-title">
+<h2 id="features-title">Mistä löydän uudet ominaisuudet?</h2>
+<div class="stack features">
+<section class="feature panel" id="activities" aria-labelledby="activities-title">
+<h3 id="activities-title">Muut treenit ja GPS</h3>
+<div class="feature-with-image"><div>
+<p class="path">Treeni → Muut treenit → Valitse laji</p>
+<p>Kävelyt, juoksut ja pyöräilyt tulevat samaan historiaan, ja tuetuissa ulkolajeissa voit tallentaa GPS-reitin.</p>
+<details id="workout-summary"><summary><span>Reitti ja yhteenveto</span></summary>
+<p>Tuetuissa ulkolajeissa voit tallentaa GPS-reitin ja seurata matkaa ja vauhtia. Valitse GPS ennen aloitusta ja myönnä sijaintilupa, jos haluat tallentaa reitin. Valmis harjoitus ja saatavilla olevat mittarit löytyvät Historiasta.</p>
+<p>GPS-matkan tallennuttua lopetus avaa yhteenvedon suoraan. Ilman GPS-matkaa sovellus voi kysyä matkan käsin. Voit valita Älä näytä uudelleen; saat kyselyn takaisin Kysy harjoituksen lopuksi -asetuksesta. Yhteenvedossa voit korjata matkaa ja lisätä muistiinpanoja. Vain saatavilla olevat mittaustiedot näytetään.</p></details>
+</div><figure><div class="phone"><img src="../ohje/assets/01-treeni.webp" alt="GymTrackerin Treeni-näkymä, josta voi aloittaa ohjelman seuraavan harjoituksen tai valita Muut treenit." loading="lazy" decoding="async"></div><figcaption>Kuvakaappaus suomeksi</figcaption></figure></div>
+</section>
+<section class="feature panel" id="coach" aria-labelledby="coach-title">
+<h3 id="coach-title">Valmentajan viikkopalaute</h3>
+<p class="path">Treeni → ⋮ → Valmentajan palaute</p>
+<p>Valmentaja tarkastelee treenejäsi pidemmällä aikavälillä ja antaa yhden painopisteen seuraavalle jaksolle.</p><details id="coach-controls"><summary><span>Arviot, viikkopalaute ja ohjelman hienosäätö</span></summary>
+<p>Valmentajan viikkopalaute tarkastelee treenejäsi pidemmällä aikavälillä. Saat arvion harjoittelustasi ja yhden painopisteen seuraavalle jaksolle. Palautteessa voidaan huomioida myös kirjattu aerobinen harjoittelu, lämmittely ja kehonhuolto.</p>
+<p>Viikkokyselyssä kerrot, miten palauduit ja miltä treeniviikko tuntui. Valmentajan viikkopalaute näyttää valmentajan arvion. Tekoäly tarvitsee verkkoyhteyden ja arvio perustuu käytettävissä oleviin tietoihin.</p>
+<p>Ohjelman hienosäätö koskee tulevia treenejä. Pois käytöstä estää muutokset. Vain ehdotuksia -tilassa tarkistat ja hyväksyt ne itse. Automaattisessa tilassa sopivia muutoksia voidaan tehdä uuden kokonaisarvion jälkeen. Käynnissä oleva treeni säilyy ennallaan.</p></details>
+</section>
+<section class="feature panel" id="interface" aria-labelledby="interface-title">
+<h3 id="interface-title">Treeninäkymä ja opastus</h3>
+<p>Napauta treenin aikana mittaria, kun haluat vaihtaa sen näyttämää tietoa.</p><p class="path">Ohje → Tutustu GymTrackeriin / GymTrackerin tilaus → Tutustu GymTrackeriin</p>
+<details id="workout-guide"><summary><span>Numeronäppäimistö ja opastuksen sisältö</span></summary>
+<p>Sovelluksen oma numeronäppäimistö helpottaa painojen ja toistojen muokkausta. Napauttamalla treenin mittaria voit vaihtaa, mitä tietoa se näyttää.</p>
+<p>Ohje- ja tilaussivun Tutustu GymTrackeriin -kierros näyttää, miten treeni kirjataan, kehonhuollon ajastinta käytetään ja kehitystä seurataan.</p></details>
+</section>
+<section class="feature panel" id="health-connect" aria-labelledby="health-connect-title">
+<h3 id="health-connect-title">Health Connect</h3>
+<p>Tuo muiden sovellusten treenejä ja unta tai vie valmistuneet GymTracker-treenit. Voit ottaa tuonnin ja viennin käyttöön erikseen.</p><p class="path">Asetukset → Sovelluksen asetukset → Health Connect</p>
+<details id="health-connect-details"><summary><span>Luvat, synkronointi ja tietojen käyttö</span></summary>
+<p>Avaa Asetukset → Sovelluksen asetukset → Health Connect. Ota tuonti ja vienti käyttöön erikseen ja hyväksy haluamiesi tietojen luvat. Saatavuus riippuu puhelimen Health Connect -tuesta. Voit lopettaa tuonnin tai viennin tästä näkymästä ja hallita lupia Health Connectissa.</p>
+<p>Tuonti hakee muiden sovellusten harjoitukset ja unisessiot viimeiseltä neljältä viikolta. Tiedot päivittyvät automaattisesti avatessasi sovelluksen ja kerran vuorokaudessa taustalla, jos laite tukee sitä ja sallit taustalukemisen. Voit päivittää tiedot myös asetusten tuontipainikkeella. Harjoitukset näkyvät historiassa alkuperätietoineen.</p>
+<p>Vienti tallentaa valmistuneita GymTracker-harjoituksia sekä saatavilla olevia syke-, aktiivisten kalorien, matka-, askel- ja reittitietoja myönnettyjen lupien mukaan. Muut sovellukset näyttävät tiedot oman tukensa mukaisesti.</p>
+<p>Avaa tuotu harjoitus Historiasta ja valitse reitin näyttäminen. Toisen sovelluksen reitti voi vaatia erillisen luvan. Kaikista harjoituksista ei ole reittiä tai kaikkia mittaustietoja.</p>
+<p>Tuodut tiedot tallennetaan puhelimeesi. Unen ja muun liikunnan yhteenvetoja voidaan lähettää tekoälypalveluun valmentajan arviota varten. Health Connect ei korvaa varmuuskopiointia.</p></details>
+</section>
+</div>
+</section>
+<section id="smaller-improvements" aria-labelledby="smaller-improvements-title">
+<h2 id="smaller-improvements-title">Pienemmät parannukset</h2>
+<div class="panel"><p>Aiemmin valittu lämmittely näkyy oikealla kuvalla ja sovelluksen nykyisellä kielellä. Myös kuvallisen opastuksen korostuksia on tarkennettu.</p></div>
+</section>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap footer-row">
+      <span>GymTracker</span>
+      <a id="top-link" href="#top">Takaisin alkuun</a>
+    </div>
+  </footer>
+  <script id="translations" type="application/json">
+{
+  "fi": {
+    "language": "Kieli",
+    "title": "Uutta GymTrackerissa",
+    "uiTitle": "Sujuvampi treenin kirjaus",
+    "subscriptionTitle": "Mitä tilausmalli tarkoittaa minulle?",
+    "paidTitle": "Minulla on tilaus tai Lifetime-oikeus",
+    "paidBody": "Voimassa oleva tilauksesi tai Lifetime-oikeutesi säilyy. Jos osto ei näy, palauta ostot Tilaus-näkymässä samalla Google Play -tilillä, jolla teit oston.",
+    "freeTitle": "Käytän vanhaa ilmaista versiota",
+    "freeBody": "Vain siirtymäpäivityksen aikaan FREE-tilaa mainoksilla käyttäneet vanhat asennukset säilyttävät salitreenien peruskirjaamisen mainoksilla. Oikeus säilyy sovelluspäivityksissä, mutta ei siirry varmuuskopion, uudelleenasennuksen, sovellustietojen tyhjennyksen tai puhelimen vaihdon mukana. Tilaus avaa kaikki ominaisuudet; sen päätyttyä säilynyt ilmaisoikeus jatkuu alkuperäisessä asennuksessa.",
+    "oldTrialTitle": "Aiempi kokeiluni on vielä voimassa",
+    "oldTrialBody": "Aiempi paikallinen kokeilu jatkuu alkuperäiseen päättymispäivään. Sen jälkeen tarvitset voimassa olevan käyttöoikeuden uuden treenin aloittamiseen. Päivitys ei aloita uutta kokeilua.",
+    "newTitle": "Olen uusi käyttäjä tai haluan tilata",
+    "newBody": "Valitse kuukausi- tai vuositilaus. Google Play näyttää hinnan ja mahdollisen kokeilutarjouksen ennen kuin hyväksyt tilauksen.",
+    "renewal": "Tilaus uusiutuu automaattisesti näytetyllä hinnalla, ellet peru sitä Google Playssa.",
+    "trialOffer": "30 päivän maksuton kokeilu tarjotaan siihen oikeutetuille. Peru kokeilun aikana Google Playssa välttääksesi ensimmäisen maksun.",
+    "dataTitle": "Historia ja varmuuskopiot",
+    "dataBody": "Kokeilun tai tilauksen päätyttyä voit katsella treenihistoriaasi sekä viedä ja palauttaa varmuuskopion käsin. Uusi harjoittelu edellyttää voimassa olevaa tilausta, ellei sinulla ole aiempaa voimassa olevaa käyttöoikeutta. Tilauksen peruminen säilyttää käyttöoikeuden myönnetyn kauden loppuun. Voit tehdä jo käynnissä olevan harjoituksen loppuun.",
+    "caption": "Sovellusnäkymä englanniksi",
+    "alt": "GymTrackerin Treeni-näkymä, josta voi aloittaa ohjelman seuraavan harjoituksen tai valita Muut treenit.",
+    "routeTitle": "Reitti ja yhteenveto",
+    "routeBody": "Tuetuissa ulkolajeissa voit tallentaa GPS-reitin ja seurata matkaa ja vauhtia. Valitse GPS ennen aloitusta ja myönnä sijaintilupa, jos haluat tallentaa reitin. Valmis harjoitus ja saatavilla olevat mittarit löytyvät Historiasta.",
+    "activitiesFinishBody": "GPS-matkan tallennuttua lopetus avaa yhteenvedon suoraan. Ilman GPS-matkaa sovellus voi kysyä matkan käsin. Voit valita Älä näytä uudelleen; saat kyselyn takaisin Kysy harjoituksen lopuksi -asetuksesta. Yhteenvedossa voit korjata matkaa ja lisätä muistiinpanoja. Vain saatavilla olevat mittaustiedot näytetään.",
+    "coachTitle": "Arviot, viikkopalaute ja ohjelman hienosäätö",
+    "coachIntro": "Valmentajan viikkopalaute tarkastelee treenejäsi pidemmällä aikavälillä. Saat arvion harjoittelustasi ja yhden painopisteen seuraavalle jaksolle. Palautteessa voidaan huomioida myös kirjattu aerobinen harjoittelu, lämmittely ja kehonhuolto.",
+    "coachBody": "Viikkokyselyssä kerrot, miten palauduit ja miltä treeniviikko tuntui. Valmentajan viikkopalaute näyttää valmentajan arvion. Tekoäly tarvitsee verkkoyhteyden ja arvio perustuu käytettävissä oleviin tietoihin.\n\nOhjelman hienosäätö koskee tulevia treenejä. Pois käytöstä estää muutokset. Vain ehdotuksia -tilassa tarkistat ja hyväksyt ne itse. Automaattisessa tilassa sopivia muutoksia voidaan tehdä uuden kokonaisarvion jälkeen. Käynnissä oleva treeni säilyy ennallaan.",
+    "logBody": "Sovelluksen oma numeronäppäimistö helpottaa painojen ja toistojen muokkausta. Napauttamalla treenin mittaria voit vaihtaa, mitä tietoa se näyttää.",
+    "tourBody": "Ohje- ja tilaussivun Tutustu GymTrackeriin -kierros näyttää, miten treeni kirjataan, kehonhuollon ajastinta käytetään ja kehitystä seurataan.",
+    "health": "Health Connect",
+    "healthSetupBody": "Avaa Asetukset → Sovelluksen asetukset → Health Connect. Ota tuonti ja vienti käyttöön erikseen ja hyväksy haluamiesi tietojen luvat. Saatavuus riippuu puhelimen Health Connect -tuesta. Voit lopettaa tuonnin tai viennin tästä näkymästä ja hallita lupia Health Connectissa.",
+    "healthSharingBody": "Tuonti hakee muiden sovellusten harjoitukset ja unisessiot viimeiseltä neljältä viikolta. Tiedot päivittyvät automaattisesti avatessasi sovelluksen ja kerran vuorokaudessa taustalla, jos laite tukee sitä ja sallit taustalukemisen. Voit päivittää tiedot myös asetusten tuontipainikkeella. Harjoitukset näkyvät historiassa alkuperätietoineen.\n\nVienti tallentaa valmistuneita GymTracker-harjoituksia sekä saatavilla olevia syke-, aktiivisten kalorien, matka-, askel- ja reittitietoja myönnettyjen lupien mukaan. Muut sovellukset näyttävät tiedot oman tukensa mukaisesti.",
+    "healthDataBody": "Avaa tuotu harjoitus Historiasta ja valitse reitin näyttäminen. Toisen sovelluksen reitti voi vaatia erillisen luvan. Kaikista harjoituksista ei ole reittiä tai kaikkia mittaustietoja.\n\nTuodut tiedot tallennetaan puhelimeesi. Unen ja muun liikunnan yhteenvetoja voidaan lähettää tekoälypalveluun valmentajan arviota varten. Health Connect ei korvaa varmuuskopiointia.",
+    "fixBody": "Aiemmin valittu lämmittely näkyy oikealla kuvalla ja sovelluksen nykyisellä kielellä. Myös kuvallisen opastuksen korostuksia on tarkennettu.",
+    "skip": "Siirry sisältöön",
+    "top": "Takaisin alkuun",
+    "eyebrow": "Ennakkotieto · Päivitys tulossa",
+    "weeklyTitle": "Valmentajan viikkopalaute",
+    "activitiesTitle": "Muut treenit ja GPS",
+    "highlightCoach": "Valmentaja tarkastelee treenejäsi pidemmällä aikavälillä ja antaa yhden painopisteen seuraavalle jaksolle.",
+    "highlightActivities": "Kävelyt, juoksut ja pyöräilyt tulevat samaan historiaan, ja tuetuissa ulkolajeissa voit tallentaa GPS-reitin.",
+    "highlightLogging": "Oma numeronäppäimistö helpottaa kirjaamista ja voit vaihtaa treenissä näkyviä mittareita.",
+    "subscriptionLink": "Miten tilausmalli vaikuttaa minuun?",
+    "historyTitle": "Treenihistoria pysyy luettavissa",
+    "historyLead": "Voit katsella treenihistoriaasi myös kokeilun tai tilauksen päätyttyä.",
+    "legacyTitle": "Peruskirjaus vanhalla asennuksella",
+    "legacyLead": "Siirtymäpäivityksen aikaan mainoksellista ilmaisversiota käyttäneet voivat jatkaa salitreenien peruskirjausta alkuperäisellä asennuksella. Oikeus ei siirry uudelleenasennuksessa eikä puhelimen vaihdossa.",
+    "featuresTitle": "Mistä löydän uudet ominaisuudet?",
+    "workoutTitle": "Treeninäkymä ja opastus",
+    "metricsLead": "Napauta treenin aikana mittaria, kun haluat vaihtaa sen näyttämää tietoa.",
+    "healthLead": "Tuo muiden sovellusten treenejä ja unta tai vie valmistuneet GymTracker-treenit. Voit ottaa tuonnin ja viennin käyttöön erikseen.",
+    "smallerTitle": "Pienemmät parannukset",
+    "captionFi": "Kuvakaappaus suomeksi",
+    "workoutDetails": "Numeronäppäimistö ja opastuksen sisältö",
+    "healthDetails": "Luvat, synkronointi ja tietojen käyttö",
+    "activitiesPath": "Treeni → Muut treenit → Valitse laji",
+    "coachPath": "Treeni → ⋮ → Valmentajan palaute",
+    "tourPath": "Ohje → Tutustu GymTrackeriin / GymTrackerin tilaus → Tutustu GymTrackeriin",
+    "healthPath": "Asetukset → Sovelluksen asetukset → Health Connect"
+  },
+  "en": {
+    "language": "Language",
+    "title": "What’s new in GymTracker",
+    "uiTitle": "Easier workout logging",
+    "subscriptionTitle": "What does the subscription model mean for me?",
+    "paidTitle": "I have a subscription or lifetime access",
+    "paidBody": "Your active subscription or lifetime access continues. If your purchase is missing, restore purchases on the Subscription screen using the Google Play account you bought it with.",
+    "freeTitle": "I use the previous free version",
+    "freeBody": "Only existing installations using the free mode with ads at the transition keep basic gym workout logging with ads. This right survives app updates but does not transfer through a backup, reinstallation, app data reset or a new phone. A subscription adds all features; when it ends, the preserved free access remains on the original installation.",
+    "oldTrialTitle": "My previous trial is still active",
+    "oldTrialBody": "Your previous local trial continues until its original end date. After that, you need active access to start a new workout. Updating does not start another trial.",
+    "newTitle": "I’m new or want to subscribe",
+    "newBody": "Choose a monthly or annual plan. Google Play shows the price and any available trial offer before you confirm your subscription.",
+    "renewal": "The subscription renews automatically at the displayed price unless canceled through Google Play.",
+    "trialOffer": "The 30-day free trial is available to eligible users. Cancel during the trial through Google Play to avoid the first payment.",
+    "dataTitle": "History and backups",
+    "dataBody": "After your trial or subscription ends, you can view your workout history and manually export and restore a backup. New training requires an active subscription unless you have valid existing access. Canceling a subscription keeps access until the granted period ends. You can finish a workout that is already in progress.",
+    "caption": "App screenshot in English",
+    "alt": "The GymTracker Workout screen, with buttons for starting your next planned workout or opening Other workouts.",
+    "routeTitle": "Route and summary",
+    "routeBody": "In supported outdoor activities, you can record a GPS route and track distance and pace. Turn on GPS before you start and grant location permission if you want to save the route. Find the finished activity and available metrics in History.",
+    "activitiesFinishBody": "When GPS distance has been saved, finishing opens the summary directly. Without GPS distance, the app can ask you to enter distance manually. Choose Don’t show again to hide the prompt; restore it with Ask after workout. You can correct distance and add notes in the summary. Only available measurements are shown.",
+    "coachTitle": "Reviews, weekly feedback and program adjustments",
+    "coachIntro": "Weekly coach feedback takes a longer view of your training. You get an assessment and one focus for the next period. Feedback can also consider logged cardio, warm-ups and body care.",
+    "coachBody": "The weekly survey asks about recovery and how your training week felt. Coach weekly feedback shows the coaching review. AI needs internet access and uses the information available.\n\nProgram adjustments affect future workouts. Off prevents changes. In Suggest only mode, you review and accept them yourself. Automatic mode may make suitable changes after a new full review. Your active workout stays as it is.",
+    "logBody": "The built-in number pad makes editing weights and reps easier. Tap a workout metric to change what it shows.",
+    "tourBody": "Open Explore GymTracker from Help or Subscription to see how to log a workout, use the body care timer and follow your progress.",
+    "health": "Health Connect",
+    "healthSetupBody": "Open Settings → App settings → Health Connect. Enable import and export separately and grant permissions for the data you want to share. Availability depends on your phone’s Health Connect support. Stop import or export here and manage permissions in Health Connect.",
+    "healthSharingBody": "Import retrieves other apps’ workouts and sleep sessions from the last four weeks. Updates automatically when you open the app and once a day in the background when your device supports it and you allow background reading. You can also refresh with the import button in settings. Workouts appear in History with their source.\n\nExport writes completed GymTracker workouts and available heart-rate, active-calorie, distance, step and route data according to granted permissions. Other apps display data according to their own support.",
+    "healthDataBody": "Open an imported workout in History and choose to show its route. Another app’s route may need separate permission. Some workouts have no route or lack some measurements.\n\nImported data is saved on your phone. Sleep and other-activity summaries may be sent to the AI service for coaching reviews. Health Connect does not replace a backup.",
+    "fixBody": "Your previous warm-up selection displays the right image and follows the current app language. Highlights in the visual tour are more precise.",
+    "skip": "Skip to content",
+    "top": "Back to top",
+    "eyebrow": "Preview · Update coming soon",
+    "weeklyTitle": "Weekly coach feedback",
+    "activitiesTitle": "Other workouts and GPS",
+    "highlightCoach": "Your coach will take a longer view of your training and suggest one focus for the next period.",
+    "highlightActivities": "Walking, running and cycling will share one history, with GPS routes for supported outdoor activities.",
+    "highlightLogging": "A built-in number pad will make logging easier, and you’ll be able to choose which metrics appear during workouts.",
+    "subscriptionLink": "How will the subscription model affect me?",
+    "historyTitle": "Your workout history stays readable",
+    "historyLead": "You can view your workout history after your trial or subscription ends.",
+    "legacyTitle": "Basic logging on your original installation",
+    "legacyLead": "If you were using the ad-supported free version when the transition update arrived, you can still log basic gym workouts on the original installation. This access does not carry over if you reinstall or switch phones.",
+    "featuresTitle": "Where will I find the new features?",
+    "workoutTitle": "Workout screen and tour",
+    "metricsLead": "During a workout, tap a metric to change what it shows.",
+    "healthLead": "Import workouts and sleep from other apps or export completed GymTracker workouts. Enable import and export separately.",
+    "smallerTitle": "Smaller improvements",
+    "captionFi": "Screenshot in Finnish",
+    "workoutDetails": "Number pad and what the tour covers",
+    "healthDetails": "Permissions, sync and data use",
+    "activitiesPath": "Workout → Other workouts → Choose activity",
+    "coachPath": "Workout → ⋮ → Coach feedback",
+    "tourPath": "Help → Explore GymTracker / GymTracker subscription → Explore GymTracker",
+    "healthPath": "Settings → App settings → Health Connect"
+  },
+  "sv": {
+    "language": "Språk",
+    "title": "Nyheter i GymTracker",
+    "uiTitle": "Enklare att logga träningspass",
+    "subscriptionTitle": "Vad betyder prenumerationsmodellen för mig?",
+    "paidTitle": "Jag har en prenumeration eller livstidsåtkomst",
+    "paidBody": "Din aktiva prenumeration eller livstidsåtkomst fortsätter att gälla. Om köpet saknas kan du återställa det på prenumerationssidan med Google Play-kontot som användes vid köpet.",
+    "freeTitle": "Jag använder den tidigare gratisversionen",
+    "freeBody": "Endast befintliga installationer som använde gratisläget med annonser vid övergången behåller grundläggande gymregistrering med annonser. Rätten bevaras vid uppdateringar men överförs inte via säkerhetskopia, ominstallation, radering av appdata eller en ny telefon. En prenumeration ger alla funktioner; när den upphör kvarstår den bevarade kostnadsfria åtkomsten i den ursprungliga installationen.",
+    "oldTrialTitle": "Min tidigare provperiod pågår fortfarande",
+    "oldTrialBody": "Den tidigare lokala provperioden fortsätter till sitt ursprungliga slutdatum. Därefter behöver du giltig åtkomst för att starta ett nytt pass. Uppdateringen startar ingen ny provperiod.",
+    "newTitle": "Jag är ny eller vill prenumerera",
+    "newBody": "Välj en månads- eller årsprenumeration. Google Play visar priset och eventuellt proverjudande innan du bekräftar.",
+    "renewal": "Prenumerationen förnyas automatiskt till det visade priset om du inte avslutar den via Google Play.",
+    "trialOffer": "Den kostnadsfria provperioden på 30 dagar erbjuds behöriga användare. Avsluta under provperioden via Google Play för att undvika den första betalningen.",
+    "dataTitle": "Historik och säkerhetskopior",
+    "dataBody": "När provperioden eller prenumerationen tar slut kan du se din träningshistorik och exportera och återställa en säkerhetskopia manuellt. Ny träning kräver en aktiv prenumeration om du inte har giltig befintlig åtkomst. Uppsägning behåller åtkomsten till slutet av den beviljade perioden. Du kan slutföra ett pass som redan pågår.",
+    "caption": "Appbild på engelska",
+    "alt": "Träningsvyn i GymTracker med alternativ för att starta nästa planerade pass eller öppna övriga träningspass.",
+    "routeTitle": "Rutt och sammanfattning",
+    "routeBody": "För utomhusaktiviteter som stöds kan du spara en GPS-rutt och följa distans och tempo. Slå på GPS före start och ge platsbehörighet om du vill spara rutten. Det slutförda passet och tillgängliga mätvärden finns i historiken.",
+    "activitiesFinishBody": "När GPS-sträcka har sparats öppnas sammanfattningen direkt vid avslut. Utan GPS-sträcka kan appen be om manuell sträcka. Välj Visa inte igen för att dölja frågan och återaktivera den med Fråga efter passet. I sammanfattningen kan du korrigera sträckan och lägga till anteckningar. Endast tillgängliga mätvärden visas.",
+    "coachTitle": "Utvärderingar, veckofeedback och programjustering",
+    "coachIntro": "Tränarens veckofeedback ser på din träning över en längre tid. Du får en bedömning och ett fokus för nästa period. Även registrerad konditionsträning, uppvärmning och kroppsvård kan vägas in.",
+    "coachBody": "Veckoenkäten frågar om återhämtningen och hur träningsveckan kändes. Coachens veckofeedback visar utvärderingen. AI behöver internet och använder tillgängliga uppgifter.\n\nProgramjustering gäller framtida pass. Av förhindrar ändringar. Med Endast förslag granskar och godkänner du själv. Automatiskt läge kan göra lämpliga ändringar efter en ny helhetsutvärdering. Det pågående passet ändras inte.",
+    "logBody": "Det inbyggda siffertangentbordet gör det enklare att ändra vikt och repetitioner. Tryck på ett mätvärde för att byta vilken information som visas.",
+    "tourBody": "Öppna den guidade rundan från Hjälp eller prenumerationssidan. Den visar hur du loggar ett pass, använder timern för kroppsvård och följer dina framsteg.",
+    "health": "Health Connect",
+    "healthSetupBody": "Öppna Inställningar → Appinställningar → Health Connect. Aktivera import och export separat och ge behörighet för önskade data. Tillgängligheten beror på telefonens stöd för Health Connect. Stoppa import eller export här och hantera behörigheter i Health Connect.",
+    "healthSharingBody": "Import hämtar andra appars träningspass och sömnsessioner från de senaste fyra veckorna. Uppgifterna uppdateras automatiskt när du öppnar appen och en gång om dagen i bakgrunden om enheten stöder det och du tillåter bakgrundsläsning. Du kan också uppdatera med importknappen i inställningarna. Passen visas i Historik med sin källa.\n\nExport skriver färdiga GymTracker-pass samt tillgänglig puls, aktiva kalorier, sträcka, steg och rutter enligt beviljade behörigheter. Andra appar visar data enligt sitt stöd.",
+    "healthDataBody": "Öppna ett importerat pass i Historik och välj att visa rutten. En annan apps rutt kan kräva separat behörighet. Alla pass har inte rutt eller alla mätvärden.\n\nImporterade data sparas på telefonen. Sömn- och aktivitetssammanfattningar kan skickas till AI-tjänsten för coachutvärderingar. Health Connect ersätter inte säkerhetskopiering.",
+    "fixBody": "Ditt tidigare val av uppvärmning visas med rätt bild på appens aktuella språk. Markeringarna i den visuella guiden har också förtydligats.",
+    "skip": "Hoppa till innehållet",
+    "top": "Tillbaka till toppen",
+    "eyebrow": "Förhandsinfo · Uppdatering på väg",
+    "weeklyTitle": "Tränarens veckofeedback",
+    "activitiesTitle": "Andra träningspass och GPS",
+    "highlightCoach": "Tränaren kommer att se på din träning över längre tid och föreslå ett fokus för nästa period.",
+    "highlightActivities": "Promenader, löpning och cykling samlas i samma historik, med GPS-rutter för utomhusaktiviteter som stöds.",
+    "highlightLogging": "En egen sifferknappsats förenklar registreringen och du kommer att kunna välja vilka mätvärden som visas under passet.",
+    "subscriptionLink": "Hur påverkar prenumerationsmodellen mig?",
+    "historyTitle": "Träningshistoriken finns kvar",
+    "historyLead": "Du kan se din träningshistorik även efter att provperioden eller prenumerationen har löpt ut.",
+    "legacyTitle": "Grundläggande registrering på den ursprungliga installationen",
+    "legacyLead": "Om du använde gratisversionen med annonser när övergångsuppdateringen kom kan du fortsätta registrera grundläggande gympass på den ursprungliga installationen. Åtkomsten följer inte med vid ominstallation eller telefonbyte.",
+    "featuresTitle": "Var hittar jag de nya funktionerna?",
+    "workoutTitle": "Träningsvyn och guiden",
+    "metricsLead": "Tryck på ett mätvärde under passet för att ändra vad det visar.",
+    "healthLead": "Importera träningspass och sömn från andra appar eller exportera avslutade GymTracker-pass. Aktivera import och export separat.",
+    "smallerTitle": "Mindre förbättringar",
+    "captionFi": "Skärmbild på finska",
+    "workoutDetails": "Sifferknappsatsen och guidens innehåll",
+    "healthDetails": "Behörigheter, synkronisering och dataanvändning",
+    "activitiesPath": "Träning → Andra träningspass → Välj aktivitet",
+    "coachPath": "Träning → ⋮ → Coachens feedback",
+    "tourPath": "Hjälp → Upptäck GymTracker / GymTracker-prenumeration → Upptäck GymTracker",
+    "healthPath": "Inställningar → Appinställningar → Health Connect"
+  },
+  "et": {
+    "language": "Keel",
+    "title": "Mis on GymTrackeris uut?",
+    "uiTitle": "Lihtsam treeningute salvestamine",
+    "subscriptionTitle": "Mida tellimusmudel minu jaoks tähendab?",
+    "paidTitle": "Mul on tellimus või eluaegne kasutusõigus",
+    "paidBody": "Sinu aktiivne tellimus või eluaegne kasutusõigus jääb kehtima. Kui ostu ei kuvata, taasta see tellimuse lehel sama Google Play kontoga, mida ostmisel kasutasid.",
+    "freeTitle": "Kasutan varasemat tasuta versiooni",
+    "freeBody": "Ainult ülemineku ajal tasuta režiimi reklaamidega kasutanud varasemad paigaldused säilitavad jõusaalitreeningute põhikirjamise reklaamidega. Õigus säilib uuendustes, kuid ei kandu üle varukoopia, uuesti paigaldamise, rakenduse andmete kustutamise ega uue telefoniga. Tellimus avab kõik funktsioonid; selle lõppedes säilib varasem tasuta õigus algses paigalduses.",
+    "oldTrialTitle": "Minu varasem prooviperiood veel kestab",
+    "oldTrialBody": "Varasem kohalik prooviperiood kestab algse lõppkuupäevani. Seejärel vajad uue treeningu alustamiseks kehtivat kasutusõigust. Uuendusega uut prooviperioodi ei alga.",
+    "newTitle": "Olen uus kasutaja või soovin tellida",
+    "newBody": "Vali kuu- või aastatellimus. Google Play näitab hinda ja võimalikku proovipakkumist enne tellimuse kinnitamist.",
+    "renewal": "Tellimus uueneb automaatselt näidatud hinnaga, kui sa seda Google Plays ei tühista.",
+    "trialOffer": "30-päevane tasuta prooviperiood on saadaval sobivatele kasutajatele. Esimese makse vältimiseks tühista tellimus prooviperioodi jooksul Google Plays.",
+    "dataTitle": "Ajalugu ja varukoopiad",
+    "dataBody": "Prooviperioodi või tellimuse lõppedes saad vaadata treeninguajalugu ning varukoopia käsitsi eksportida ja taastada. Uus treening nõuab kehtivat tellimust, kui sul ei ole varasemat kehtivat kasutusõigust. Tellimuse tühistamine säilitab õiguse antud perioodi lõpuni. Juba käimasoleva treeningu saad lõpuni teha.",
+    "caption": "Rakenduse kuvatõmmis inglise keeles",
+    "alt": "GymTrackeri treeninguvaade, kus saab alustada järgmist plaanitud treeningut või avada muud treeningud.",
+    "routeTitle": "Marsruut ja kokkuvõte",
+    "routeBody": "Toetatud välitreeningutel saad salvestada GPS-marsruudi ning jälgida vahemaad ja tempot. Lülita GPS enne alustamist sisse ja luba asukohale juurdepääs, kui soovid marsruuti salvestada. Lõpetatud treening ja saadaolevad näitajad on ajaloos.",
+    "activitiesFinishBody": "Kui GPS-vahemaa on salvestatud, avaneb lõpetamisel kohe kokkuvõte. Ilma GPS-vahemaata võib rakendus küsida käsitsi vahemaad. Vali Ära näita uuesti ja taasta küsimus seadega Küsi treeningu lõpus. Kokkuvõttes saad vahemaad parandada ja märkmeid lisada. Kuvatakse ainult olemasolevad mõõteandmed.",
+    "coachTitle": "Hinnangud, nädalatagasiside ja kava kohandamine",
+    "coachIntro": "Treeneri iganädalane tagasiside vaatleb sinu treeninguid pikema aja jooksul. Saad hinnangu ja ühe fookuse järgmiseks perioodiks. Arvesse võib võtta ka salvestatud aeroobseid treeninguid, soojendust ja kehahooldust.",
+    "coachBody": "Nädalaküsitlus küsib taastumise ja treeningunädala enesetunde kohta. Treeneri nädalatagasiside näitab hinnangut. Tehisintellekt vajab internetti ja kasutab olemasolevaid andmeid.\n\nKava kohandamine puudutab tulevasi treeninguid. Väljas keelab muudatused. Soovitusrežiimis vaatad need üle ja kinnitad ise. Automaatrežiim võib sobivaid muudatusi teha pärast uut tervikhinnangut. Käimasolev treening ei muutu.",
+    "logBody": "Sisseehitatud numbriklaviatuur teeb raskuse ja korduste muutmise lihtsamaks. Puuduta treeningunäitajat, et muuta kuvatavat teavet.",
+    "tourBody": "Ava juhendatud tutvustus abi- või tellimuse lehelt. Näed, kuidas treeningut salvestada, kehahoolduse taimerit kasutada ja arengut jälgida.",
+    "health": "Health Connect",
+    "healthSetupBody": "Ava Seaded → Rakenduse seaded → Health Connect. Lülita import ja eksport eraldi sisse ning anna soovitud andmetele load. Saadavus sõltub telefoni Health Connecti toest. Siin saad impordi või ekspordi peatada ja Health Connectis lube hallata.",
+    "healthSharingBody": "Import toob teiste rakenduste viimase nelja nädala treeningud ja unesessioonid. Andmeid uuendatakse automaatselt rakenduse avamisel ja kord ööpäevas taustal, kui seade seda toetab ning lubad taustal lugemise. Andmeid saad uuendada ka seadete impordinupuga. Treeningud kuvatakse ajaloos koos allikaga.\n\nEksport salvestab lõpetatud GymTrackeri treeningud ning olemasolevad pulsi-, aktiivsete kalorite, vahemaa-, sammu- ja teekonnaandmed vastavalt lubadele. Teised rakendused kuvavad andmeid oma toe järgi.",
+    "healthDataBody": "Ava imporditud treening ajaloos ja vali teekonna kuvamine. Teise rakenduse teekond võib vajada eraldi luba. Kõigil treeningutel pole teekonda või kõiki mõõteandmeid.\n\nImporditud andmed salvestatakse telefoni. Une ja muu liikumise kokkuvõtteid võidakse saata tehisintellekti teenusele treeneri hinnanguks. Health Connect ei asenda varundamist.",
+    "fixBody": "Sinu varasem soojendusvalik kuvatakse õige pildiga rakenduse praeguses keeles. Täpsustasime ka visuaalse tutvustuse esiletõsteid.",
+    "skip": "Liigu sisu juurde",
+    "top": "Tagasi üles",
+    "eyebrow": "Eelinfo · Uuendus on tulekul",
+    "weeklyTitle": "Treeneri iganädalane tagasiside",
+    "activitiesTitle": "Muud treeningud ja GPS",
+    "highlightCoach": "Treener vaatab sinu treeninguid pikema aja lõikes ja soovitab järgmiseks perioodiks ühe fookuse.",
+    "highlightActivities": "Kõnd, jooks ja rattasõit jõuavad ühte ajalukku ning toetatud välitegevustel saab salvestada GPS-marsruudi.",
+    "highlightLogging": "Numbriklaviatuur teeb sisestamise lihtsamaks ja treeningul saad valida, milliseid näitajaid kuvada.",
+    "subscriptionLink": "Kuidas tellimusmudel mind mõjutab?",
+    "historyTitle": "Treeninguajalugu jääb nähtavaks",
+    "historyLead": "Treeninguajalugu saad vaadata ka pärast prooviperioodi või tellimuse lõppu.",
+    "legacyTitle": "Põhiline treeningute logimine algses paigalduses",
+    "legacyLead": "Kui kasutasid üleminekuuuenduse ajal reklaamidega tasuta versiooni, saad algses paigalduses jätkata jõusaalitreeningute põhilist logimist. Õigus ei kandu üle rakenduse uuesti paigaldamisel ega telefoni vahetamisel.",
+    "featuresTitle": "Kust leian uued funktsioonid?",
+    "workoutTitle": "Treeninguvaade ja tutvustus",
+    "metricsLead": "Puuduta treeningu ajal näitajat, et muuta kuvatavat teavet.",
+    "healthLead": "Impordi teistest rakendustest treeningud ja uni või ekspordi lõpetatud GymTrackeri treeningud. Lülita import ja eksport sisse eraldi.",
+    "smallerTitle": "Väiksemad täiustused",
+    "captionFi": "Soomekeelne kuvatõmmis",
+    "workoutDetails": "Numbriklaviatuur ja tutvustuse sisu",
+    "healthDetails": "Load, sünkroonimine ja andmete kasutamine",
+    "activitiesPath": "Treening → Muud treeningud → Vali tegevus",
+    "coachPath": "Treening → ⋮ → Treeneri tagasiside",
+    "tourPath": "Juhend → Tutvu GymTrackeriga / GymTrackeri tellimus → Tutvu GymTrackeriga",
+    "healthPath": "Seaded → Rakenduse seaded → Health Connect"
+  },
+  "es": {
+    "language": "Idioma",
+    "title": "Novedades de GymTracker",
+    "uiTitle": "Registro de entrenamientos más sencillo",
+    "subscriptionTitle": "¿Qué implica para mí el nuevo modelo de suscripción?",
+    "paidTitle": "Tengo una suscripción o acceso de por vida",
+    "paidBody": "Tu suscripción activa o tu acceso de por vida siguen vigentes. Si no aparece tu compra, restáurala en la pantalla de suscripción con la cuenta de Google Play que usaste al comprar.",
+    "freeTitle": "Uso la versión gratuita anterior",
+    "freeBody": "Solo las instalaciones existentes que usaban el modo gratuito con anuncios al realizarse la transición conservan el registro básico de gimnasio con anuncios. El derecho se mantiene al actualizar, pero no se transfiere mediante copias, reinstalación, borrado de datos o cambio de teléfono. Una suscripción añade todas las funciones; al terminar, el acceso gratuito conservado sigue en la instalación original.",
+    "oldTrialTitle": "Mi periodo de prueba anterior sigue activo",
+    "oldTrialBody": "Tu periodo de prueba local continúa hasta su fecha de finalización original. Después necesitarás acceso vigente para empezar un nuevo entrenamiento. La actualización no inicia otro periodo de prueba.",
+    "newTitle": "Soy nuevo o quiero suscribirme",
+    "newBody": "Elige un plan mensual o anual. Google Play muestra el precio y cualquier oferta de prueba disponible antes de que confirmes la suscripción.",
+    "renewal": "La suscripción se renueva automáticamente al precio mostrado, salvo que la canceles en Google Play.",
+    "trialOffer": "La prueba gratuita de 30 días está disponible para usuarios que cumplan los requisitos. Cancela durante la prueba en Google Play para evitar el primer pago.",
+    "dataTitle": "Historial y copias de seguridad",
+    "dataBody": "Al finalizar la prueba o suscripción puedes consultar el historial y exportar y restaurar copias manualmente. Iniciar nuevos entrenamientos requiere una suscripción activa, salvo que tengas un derecho anterior vigente. Cancelar conserva el acceso hasta el final del período concedido. Puedes terminar un entrenamiento que ya está en curso.",
+    "caption": "Captura de la aplicación en inglés",
+    "alt": "Pantalla de entrenamiento de GymTracker, con opciones para iniciar la próxima sesión programada o abrir Otros entrenamientos.",
+    "routeTitle": "Ruta y resumen",
+    "routeBody": "En las actividades al aire libre compatibles puedes registrar una ruta GPS y seguir la distancia y el ritmo. Activa el GPS antes de empezar y concede permiso de ubicación para guardar la ruta. La actividad finalizada y las métricas disponibles aparecen en el historial.",
+    "activitiesFinishBody": "Si se ha guardado distancia GPS, finalizar abre directamente el resumen. Sin distancia GPS, la aplicación puede pedir una distancia manual. Elige No volver a mostrar para ocultar la pregunta y recupérala con Preguntar al terminar. En el resumen puedes corregir la distancia y añadir notas. Solo se muestran mediciones disponibles.",
+    "coachTitle": "Evaluaciones, valoración semanal y ajuste del programa",
+    "coachIntro": "Los comentarios semanales del entrenador tienen en cuenta un periodo más amplio. Recibirás una valoración y un objetivo para la próxima etapa. También se pueden tener en cuenta las sesiones de cardio, los calentamientos y las sesiones de cuidado corporal que hayas registrado.",
+    "coachBody": "La encuesta semanal pregunta por tu recuperación y cómo sentiste la semana. La valoración semanal del Coach muestra la evaluación. La IA necesita Internet y utiliza la información disponible.\n\nLos ajustes del programa afectan a futuras sesiones. Desactivado impide cambios. En Solo sugerencias los revisas y aceptas. Automático puede hacer cambios adecuados tras una nueva evaluación completa. La sesión activa se conserva.",
+    "logBody": "El teclado numérico integrado facilita cambiar pesos y repeticiones. Toca una métrica para cambiar lo que muestra.",
+    "tourBody": "Abre la visita guiada desde Ayuda o desde la pantalla de suscripción. Verás cómo registrar un entrenamiento, usar el temporizador de cuidado corporal y seguir tu progreso.",
+    "health": "Health Connect",
+    "healthSetupBody": "Abre Ajustes → Ajustes de la aplicación → Health Connect. Activa importación y exportación por separado y autoriza los datos deseados. La disponibilidad depende del soporte de tu teléfono. Detén aquí la importación o exportación y gestiona los permisos en Health Connect.",
+    "healthSharingBody": "La importación obtiene entrenamientos y sesiones de sueño de otras aplicaciones de las últimas cuatro semanas. Los datos se actualizan al abrir la aplicación y una vez al día en segundo plano si el dispositivo lo admite y permites la lectura en segundo plano. También puedes usar el botón de importación de los ajustes. Las sesiones aparecen en el historial con su origen.\n\nLa exportación guarda sesiones GymTracker terminadas y datos disponibles de pulso, calorías activas, distancia, pasos y rutas según los permisos concedidos. Otras aplicaciones los muestran según su compatibilidad.",
+    "healthDataBody": "Abre una sesión importada en el historial y elige mostrar la ruta. La ruta de otra aplicación puede necesitar otro permiso. No todas las sesiones tienen ruta ni todas las mediciones.\n\nLos datos importados se guardan en el teléfono. Los resúmenes del sueño y otras actividades pueden enviarse al servicio de IA para las evaluaciones del Coach. Health Connect no sustituye una copia de seguridad.",
+    "fixBody": "Tu selección anterior de calentamiento aparece con la imagen correcta y en el idioma actual de la aplicación. También hemos ajustado los resaltados de la guía visual.",
+    "skip": "Saltar al contenido",
+    "top": "Volver arriba",
+    "eyebrow": "Avance · Próxima actualización",
+    "weeklyTitle": "Comentarios semanales del entrenador",
+    "activitiesTitle": "Otros entrenamientos y GPS",
+    "highlightCoach": "Tu entrenador analizará tus sesiones a lo largo del tiempo y propondrá una prioridad para el siguiente periodo.",
+    "highlightActivities": "Los paseos, las carreras y el ciclismo compartirán historial, con rutas GPS en las actividades al aire libre compatibles.",
+    "highlightLogging": "Un teclado numérico facilitará el registro y podrás elegir qué métricas se muestran durante el entrenamiento.",
+    "subscriptionLink": "¿Cómo me afecta el modelo de suscripción?",
+    "historyTitle": "Conservas el acceso a tu historial",
+    "historyLead": "Puedes consultar tu historial de entrenamiento cuando termine la prueba o la suscripción.",
+    "legacyTitle": "Registro básico en la instalación original",
+    "legacyLead": "Si usabas la versión gratuita con anuncios cuando llegó la actualización de transición, puedes seguir registrando entrenamientos básicos de gimnasio en la instalación original. El acceso no se transfiere al reinstalar la app o cambiar de teléfono.",
+    "featuresTitle": "¿Dónde encontraré las nuevas funciones?",
+    "workoutTitle": "Pantalla de entrenamiento y guía",
+    "metricsLead": "Durante el entrenamiento, toca una métrica para cambiar los datos que muestra.",
+    "healthLead": "Importa entrenamientos y sueño de otras apps o exporta sesiones completadas de GymTracker. Activa la importación y la exportación por separado.",
+    "smallerTitle": "Pequeñas mejoras",
+    "captionFi": "Captura en finés",
+    "workoutDetails": "Teclado numérico y contenido de la guía",
+    "healthDetails": "Permisos, sincronización y uso de datos",
+    "activitiesPath": "Entrenamiento → Otros entrenamientos → Elegir actividad",
+    "coachPath": "Entrenamiento → ⋮ → Comentarios del entrenador",
+    "tourPath": "Ayuda → Descubre GymTracker / Suscripción a GymTracker → Descubre GymTracker",
+    "healthPath": "Ajustes → Ajustes de la aplicación → Health Connect"
+  },
+  "de": {
+    "language": "Sprache",
+    "title": "Neu in GymTracker",
+    "uiTitle": "Training einfacher erfassen",
+    "subscriptionTitle": "Was bedeutet das Abo-Modell für mich?",
+    "paidTitle": "Ich habe ein Abo oder lebenslangen Zugriff",
+    "paidBody": "Dein aktives Abo oder dein lebenslanger Zugriff bleibt gültig. Falls dein Kauf nicht angezeigt wird, stelle ihn auf der Abo-Seite mit dem Google-Play-Konto wieder her, mit dem du ihn getätigt hast.",
+    "freeTitle": "Ich nutze die bisherige Gratisversion",
+    "freeBody": "Nur bestehende Installationen, die beim Übergang den kostenlosen Modus mit Werbung nutzten, behalten die grundlegende Aufzeichnung von Studiotrainings mit Werbung. Das Recht bleibt bei Updates erhalten, wird aber nicht durch Sicherungen, Neuinstallation, Löschen der App-Daten oder einen Telefonwechsel übertragen. Ein Abonnement schaltet alle Funktionen frei; nach Ablauf bleibt das erhaltene kostenlose Recht auf der ursprünglichen Installation bestehen.",
+    "oldTrialTitle": "Meine bisherige Testphase läuft noch",
+    "oldTrialBody": "Deine bisherige lokale Testphase läuft bis zum ursprünglichen Enddatum. Danach brauchst du einen gültigen Zugang, um ein neues Training zu starten. Das Update startet keine neue Testphase.",
+    "newTitle": "Ich bin neu oder möchte ein Abo abschließen",
+    "newBody": "Wähle ein Monats- oder Jahresabo. Google Play zeigt dir den Preis und ein eventuell verfügbares Testangebot, bevor du das Abo bestätigst.",
+    "renewal": "Das Abo verlängert sich automatisch zum angezeigten Preis, sofern du es nicht über Google Play kündigst.",
+    "trialOffer": "Der kostenlose Testzeitraum von 30 Tagen steht berechtigten Nutzern zur Verfügung. Kündige während des Testzeitraums über Google Play, um die erste Zahlung zu vermeiden.",
+    "dataTitle": "Verlauf und Sicherungen",
+    "dataBody": "Nach Ende des Testzeitraums oder Abonnements kannst du den Trainingsverlauf ansehen und Sicherungen manuell exportieren und wiederherstellen. Neues Training erfordert ein aktives Abonnement, sofern kein gültiger bestehender Zugriff vorliegt. Eine Kündigung erhält den Zugriff bis zum Ende des gewährten Zeitraums. Ein bereits laufendes Training kannst du beenden.",
+    "caption": "App-Screenshot auf Englisch",
+    "alt": "Trainingsansicht von GymTracker mit Optionen für das nächste geplante Training und weitere Trainings.",
+    "routeTitle": "Strecke und Zusammenfassung",
+    "routeBody": "Bei unterstützten Outdoor-Aktivitäten kannst du eine GPS-Strecke aufzeichnen und Distanz und Tempo verfolgen. Aktiviere GPS vor dem Start und erlaube den Standortzugriff, wenn du die Strecke speichern möchtest. Die abgeschlossene Aktivität und verfügbare Messwerte findest du im Verlauf.",
+    "activitiesFinishBody": "Bei gespeicherter GPS-Distanz öffnet sich nach dem Beenden direkt die Zusammenfassung. Ohne GPS-Distanz kann die App nach einer manuellen Distanz fragen. Mit Nicht erneut anzeigen blendest du die Frage aus; mit Nach dem Training fragen aktivierst du sie wieder. In der Zusammenfassung kannst du die Distanz korrigieren und Notizen ergänzen. Nur verfügbare Messwerte erscheinen.",
+    "coachTitle": "Bewertungen, Wochenfeedback und Plananpassung",
+    "coachIntro": "Das wöchentliche Trainerfeedback betrachtet dein Training über einen längeren Zeitraum. Du erhältst eine Einschätzung und einen Schwerpunkt für die nächste Phase. Erfasste Ausdauereinheiten, Aufwärmübungen und Einheiten zur Körperpflege können ebenfalls berücksichtigt werden.",
+    "coachBody": "Die Wochenumfrage fragt nach Erholung und deinem Gefühl zur Trainingswoche. Das Wochenfeedback des Coachs zeigt die Bewertung. KI braucht Internet und nutzt verfügbare Angaben.\n\nPlananpassungen betreffen zukünftige Einheiten. Aus verhindert Änderungen. Bei Nur Vorschläge prüfst und bestätigst du selbst. Automatisch kann nach einer neuen Gesamtbewertung passende Änderungen vornehmen. Die laufende Einheit bleibt unverändert.",
+    "logBody": "Mit dem integrierten Zahlenfeld kannst du Gewichte und Wiederholungen leichter bearbeiten. Tippe auf einen Trainingswert, um die angezeigten Informationen zu wechseln.",
+    "tourBody": "Öffne die Tour in der Hilfe oder auf der Abo-Seite. Dort siehst du, wie du ein Training erfasst, den Timer für Körperpflege nutzt und deinen Fortschritt verfolgst.",
+    "health": "Health Connect",
+    "healthSetupBody": "Öffne Einstellungen → App-Einstellungen → Health Connect. Aktiviere Import und Export getrennt und erteile Berechtigungen für gewünschte Daten. Die Verfügbarkeit hängt vom Health-Connect-Support deines Telefons ab. Hier stoppst du Import oder Export; Berechtigungen verwaltest du in Health Connect.",
+    "healthSharingBody": "Der Import lädt Trainings und Schlafsitzungen anderer Apps aus den letzten vier Wochen. Die Daten werden beim Öffnen der App automatisch aktualisiert und einmal täglich im Hintergrund, wenn dein Gerät dies unterstützt und du das Lesen im Hintergrund erlaubst. Du kannst auch die Importschaltfläche in den Einstellungen nutzen. Einheiten erscheinen mit Quelle im Verlauf.\n\nDer Export schreibt abgeschlossene GymTracker-Einheiten sowie verfügbare Puls-, Aktivkalorien-, Distanz-, Schritt- und Routendaten gemäß deinen Berechtigungen. Andere Apps zeigen Daten entsprechend ihrer Unterstützung.",
+    "healthDataBody": "Öffne ein importiertes Training im Verlauf und wähle die Routenanzeige. Routen anderer Apps können eine eigene Berechtigung benötigen. Nicht alle Einheiten enthalten Routen oder alle Messwerte.\n\nImportierte Daten werden auf dem Telefon gespeichert. Zusammenfassungen zu Schlaf und anderen Aktivitäten können für Bewertungen an den KI-Dienst gesendet werden. Health Connect ersetzt keine Sicherung.",
+    "fixBody": "Deine bisherige Aufwärmauswahl erscheint mit dem richtigen Bild und in der aktuellen App-Sprache. Die Hervorhebungen in der Tour wurden ebenfalls präzisiert.",
+    "skip": "Zum Inhalt springen",
+    "top": "Nach oben",
+    "eyebrow": "Vorschau · Update folgt",
+    "weeklyTitle": "Wöchentliches Trainerfeedback",
+    "activitiesTitle": "Weitere Trainingsarten und GPS",
+    "highlightCoach": "Der Trainer wird dein Training über einen längeren Zeitraum betrachten und einen Schwerpunkt für die nächste Phase vorschlagen.",
+    "highlightActivities": "Gehen, Laufen und Radfahren landen im selben Verlauf, bei unterstützten Outdoor-Aktivitäten auch mit GPS-Route.",
+    "highlightLogging": "Ein eigener Ziffernblock erleichtert das Erfassen, und du wirst die angezeigten Trainingswerte auswählen können.",
+    "subscriptionLink": "Was bedeutet das Abomodell für mich?",
+    "historyTitle": "Dein Trainingsverlauf bleibt einsehbar",
+    "historyLead": "Du kannst deinen Trainingsverlauf auch nach Ablauf des Testzeitraums oder Abos ansehen.",
+    "legacyTitle": "Grundfunktionen auf der ursprünglichen Installation",
+    "legacyLead": "Wenn du beim Umstellungsupdate die kostenlose Version mit Werbung genutzt hast, kannst du auf der ursprünglichen Installation weiterhin Studiotrainings grundlegend erfassen. Bei einer Neuinstallation oder einem Handywechsel wird der Zugang nicht übertragen.",
+    "featuresTitle": "Wo finde ich die neuen Funktionen?",
+    "workoutTitle": "Trainingsansicht und Rundgang",
+    "metricsLead": "Tippe während des Trainings auf einen Messwert, um die angezeigten Daten zu ändern.",
+    "healthLead": "Importiere Trainings und Schlafdaten aus anderen Apps oder exportiere abgeschlossene GymTracker-Trainings. Aktiviere Import und Export getrennt.",
+    "smallerTitle": "Kleinere Verbesserungen",
+    "captionFi": "Screenshot auf Finnisch",
+    "workoutDetails": "Ziffernblock und Inhalt des Rundgangs",
+    "healthDetails": "Berechtigungen, Synchronisierung und Datennutzung",
+    "activitiesPath": "Training → Weitere Trainings → Aktivität wählen",
+    "coachPath": "Training → ⋮ → Trainerfeedback",
+    "tourPath": "Hilfe → GymTracker entdecken / GymTracker-Abo → GymTracker entdecken",
+    "healthPath": "Einstellungen → App-Einstellungen → Health Connect"
+  },
+  "it": {
+    "language": "Lingua",
+    "title": "Novità di GymTracker",
+    "uiTitle": "Registrazione degli allenamenti più semplice",
+    "subscriptionTitle": "Cosa cambia per me con il nuovo abbonamento?",
+    "paidTitle": "Ho un abbonamento o un accesso a vita",
+    "paidBody": "Il tuo abbonamento attivo o l’accesso a vita rimangono validi. Se l’acquisto non compare, ripristinalo dalla schermata dell’abbonamento con lo stesso account Google Play usato per acquistarlo.",
+    "freeTitle": "Uso la precedente versione gratuita",
+    "freeBody": "Solo le installazioni esistenti che usavano la modalità gratuita con annunci al momento della transizione mantengono la registrazione di base degli allenamenti in palestra con annunci. Il diritto resta con gli aggiornamenti, ma non si trasferisce tramite backup, reinstallazione, cancellazione dei dati o cambio di telefono. Un abbonamento aggiunge tutte le funzioni; alla scadenza resta il diritto gratuito conservato nell’installazione originale.",
+    "oldTrialTitle": "Il mio periodo di prova precedente è ancora attivo",
+    "oldTrialBody": "Il periodo di prova locale già avviato continua fino alla scadenza originale. Dopo la scadenza ti servirà un accesso valido per iniziare un nuovo allenamento. L’aggiornamento non avvia un’altra prova.",
+    "newTitle": "Sono un nuovo utente o voglio abbonarmi",
+    "newBody": "Scegli un piano mensile o annuale. Google Play mostra il prezzo e l’eventuale offerta di prova prima che tu confermi l’abbonamento.",
+    "renewal": "L’abbonamento si rinnova automaticamente al prezzo indicato, a meno che non venga annullato tramite Google Play.",
+    "trialOffer": "La prova gratuita di 30 giorni è disponibile per gli utenti idonei. Annulla durante la prova tramite Google Play per evitare il primo pagamento.",
+    "dataTitle": "Cronologia e backup",
+    "dataBody": "Alla scadenza della prova o dell’abbonamento puoi consultare la cronologia ed esportare e ripristinare manualmente un backup. Per iniziare nuovi allenamenti serve un abbonamento attivo, salvo un diritto precedente ancora valido. La disdetta mantiene l’accesso fino alla fine del periodo concesso. Puoi completare un allenamento già in corso.",
+    "caption": "Schermata dell’app in inglese",
+    "alt": "Schermata Allenamento di GymTracker, con le opzioni per avviare la prossima sessione prevista o aprire gli altri allenamenti.",
+    "routeTitle": "Percorso e riepilogo",
+    "routeBody": "Nelle attività all’aperto supportate puoi registrare il percorso GPS e seguire distanza e ritmo. Attiva il GPS prima di iniziare e concedi l’accesso alla posizione per salvare il percorso. L’attività completata e i dati disponibili si trovano nella cronologia.",
+    "activitiesFinishBody": "Se è stata salvata una distanza GPS, al termine si apre subito il riepilogo. Senza distanza GPS, l’app può chiedere quella manuale. Scegli Non mostrare più e ripristina la domanda con Chiedi a fine allenamento. Nel riepilogo puoi correggere la distanza e aggiungere note. Sono mostrate solo misurazioni disponibili.",
+    "coachTitle": "Valutazioni, feedback settimanale e modifiche al programma",
+    "coachIntro": "Il feedback settimanale del coach considera un periodo di allenamento più ampio. Ricevi una valutazione e una priorità per il periodo successivo. Possono essere presi in considerazione anche le attività aerobiche, il riscaldamento e le sessioni di cura del corpo che hai registrato.",
+    "coachBody": "Il questionario settimanale chiede del recupero e delle sensazioni della settimana. Il feedback del Coach mostra la valutazione. L’IA necessita di Internet e usa le informazioni disponibili.\n\nGli aggiustamenti riguardano gli allenamenti futuri. Disattivato impedisce modifiche. In Solo suggerimenti le controlli e accetti tu. Automatico può fare modifiche adatte dopo una nuova valutazione completa. La sessione attiva rimane uguale.",
+    "logBody": "Il tastierino numerico integrato semplifica la modifica di pesi e ripetizioni. Tocca un indicatore dell’allenamento per cambiare il dato visualizzato.",
+    "tourBody": "Apri il tour dalla guida o dalla schermata dell’abbonamento. Ti mostra come registrare un allenamento, usare il timer per la cura del corpo e seguire i progressi.",
+    "health": "Health Connect",
+    "healthSetupBody": "Apri Impostazioni → Impostazioni dell’app → Health Connect. Attiva importazione ed esportazione separatamente e autorizza i dati desiderati. La disponibilità dipende dal supporto del telefono. Interrompi qui importazione o esportazione e gestisci i permessi in Health Connect.",
+    "healthSharingBody": "L’importazione recupera allenamenti e sessioni di sonno delle ultime quattro settimane da altre app. I dati vengono aggiornati all’apertura dell’app e una volta al giorno in background se il dispositivo lo supporta e autorizzi la lettura in background. Puoi anche usare il pulsante di importazione nelle impostazioni. Le sessioni compaiono nella cronologia con la fonte.\n\nL’esportazione scrive sessioni GymTracker completate e dati disponibili di battito, calorie attive, distanza, passi e percorsi in base ai permessi. Le altre app mostrano i dati secondo il proprio supporto.",
+    "healthDataBody": "Apri una sessione importata nella cronologia e scegli di mostrare il percorso. Quello di un’altra app può richiedere un permesso separato. Non tutte le sessioni hanno percorsi o tutte le misure.\n\nI dati importati sono salvati sul telefono. I riepiloghi di sonno e altre attività possono essere inviati al servizio IA per le valutazioni del Coach. Health Connect non sostituisce un backup.",
+    "fixBody": "Il riscaldamento che avevi scelto appare con l’immagine corretta e nella lingua corrente dell’app. Abbiamo inoltre reso più precise le evidenziazioni del tour.",
+    "skip": "Vai al contenuto",
+    "top": "Torna all’inizio",
+    "eyebrow": "Anteprima · Aggiornamento in arrivo",
+    "weeklyTitle": "Feedback settimanale dell’allenatore",
+    "activitiesTitle": "Altri allenamenti e GPS",
+    "highlightCoach": "L’allenatore analizzerà i tuoi allenamenti nel tempo e ti proporrà una priorità per il prossimo periodo.",
+    "highlightActivities": "Camminate, corse e uscite in bici finiranno nello stesso storico, con percorsi GPS per le attività all’aperto supportate.",
+    "highlightLogging": "Un tastierino numerico semplificherà la registrazione e potrai scegliere le metriche da visualizzare durante l’allenamento.",
+    "subscriptionLink": "In che modo mi riguarda il modello di abbonamento?",
+    "historyTitle": "Lo storico resta consultabile",
+    "historyLead": "Puoi consultare lo storico degli allenamenti anche dopo la fine della prova o dell’abbonamento.",
+    "legacyTitle": "Registrazione di base sull’installazione originale",
+    "legacyLead": "Se usavi la versione gratuita con pubblicità al momento dell’aggiornamento di transizione, puoi continuare a registrare gli allenamenti di base in palestra sull’installazione originale. L’accesso non si trasferisce se reinstalli l’app o cambi telefono.",
+    "featuresTitle": "Dove troverò le nuove funzioni?",
+    "workoutTitle": "Schermata di allenamento e guida",
+    "metricsLead": "Tocca una metrica durante l’allenamento per cambiare il dato mostrato.",
+    "healthLead": "Importa allenamenti e sonno da altre app oppure esporta le sessioni completate in GymTracker. Attiva importazione ed esportazione separatamente.",
+    "smallerTitle": "Miglioramenti minori",
+    "captionFi": "Schermata in finlandese",
+    "workoutDetails": "Tastierino numerico e contenuto della guida",
+    "healthDetails": "Autorizzazioni, sincronizzazione e uso dei dati",
+    "activitiesPath": "Allenamento → Altri allenamenti → Scegli attività",
+    "coachPath": "Allenamento → ⋮ → Feedback del coach",
+    "tourPath": "Aiuto → Scopri GymTracker / Abbonamento GymTracker → Scopri GymTracker",
+    "healthPath": "Impostazioni → Impostazioni dell'app → Health Connect"
+  },
+  "fr": {
+    "language": "Langue",
+    "title": "Les nouveautés de GymTracker",
+    "uiTitle": "Saisie des entraînements simplifiée",
+    "subscriptionTitle": "Qu’est-ce que ce modèle d’abonnement change pour moi ?",
+    "paidTitle": "J’ai un abonnement ou un accès à vie",
+    "paidBody": "Votre abonnement actif ou votre accès à vie reste valable. Si votre achat n’apparaît pas, restaurez-le sur l’écran d’abonnement avec le compte Google Play utilisé pour l’achat.",
+    "freeTitle": "J’utilise l’ancienne version gratuite",
+    "freeBody": "Seules les installations existantes qui utilisaient le mode gratuit avec publicités lors de la transition conservent la saisie de base des séances en salle avec publicités. Ce droit résiste aux mises à jour, mais ne se transfère pas par sauvegarde, réinstallation, effacement des données ou changement de téléphone. Un abonnement donne toutes les fonctions ; à son terme, le droit gratuit conservé reste sur l’installation d’origine.",
+    "oldTrialTitle": "Mon ancienne période d’essai est toujours en cours",
+    "oldTrialBody": "Votre essai local en cours se poursuit jusqu’à sa date de fin initiale. Ensuite, un accès valide sera nécessaire pour commencer une nouvelle séance. La mise à jour ne lance pas de nouvel essai.",
+    "newTitle": "Je découvre l’application ou je souhaite m’abonner",
+    "newBody": "Choisissez un abonnement mensuel ou annuel. Google Play affiche le prix et l’éventuelle offre d’essai avant la confirmation.",
+    "renewal": "L’abonnement se renouvelle automatiquement au prix affiché, sauf annulation via Google Play.",
+    "trialOffer": "L’essai gratuit de 30 jours est proposé aux utilisateurs éligibles. Annulez pendant l’essai via Google Play pour éviter le premier paiement.",
+    "dataTitle": "Historique et sauvegardes",
+    "dataBody": "À la fin de l’essai ou de l’abonnement, vous pouvez consulter l’historique et exporter et restaurer une sauvegarde manuellement. Un nouvel entraînement nécessite un abonnement actif, sauf droit existant encore valide. La résiliation conserve l’accès jusqu’à la fin de la période accordée. Vous pouvez terminer une séance déjà en cours.",
+    "caption": "Capture de l’application en anglais",
+    "alt": "Écran d’entraînement de GymTracker, avec les options pour démarrer la prochaine séance prévue ou accéder aux autres entraînements.",
+    "routeTitle": "Parcours et récapitulatif",
+    "routeBody": "Pour les activités de plein air compatibles, vous pouvez enregistrer un parcours GPS et suivre la distance et l’allure. Activez le GPS avant de commencer et autorisez la localisation pour enregistrer le parcours. La séance terminée et les mesures disponibles figurent dans l’historique.",
+    "activitiesFinishBody": "Si une distance GPS a été enregistrée, le résumé s’ouvre directement à la fin. Sinon, l’application peut demander une distance manuelle. Choisissez Ne plus afficher pour masquer la question ; réactivez-la avec Demander en fin de séance. Vous pouvez corriger la distance et ajouter des notes au résumé. Seules les mesures disponibles sont affichées.",
+    "coachTitle": "Bilans, retour hebdomadaire et ajustement du programme",
+    "coachIntro": "Le bilan hebdomadaire du coach analyse vos entraînements sur une période plus longue. Vous recevez une évaluation et une priorité pour la prochaine période. Le coach peut aussi tenir compte du cardio, des échauffements et des séances d’entretien du corps enregistrés.",
+    "coachBody": "Le questionnaire hebdomadaire demande votre ressenti sur la récupération et la semaine. Le retour hebdomadaire du Coach affiche le bilan. L’IA nécessite Internet et utilise les informations disponibles.\n\nLes ajustements concernent les séances futures. Désactivé les empêche. Avec Suggestions uniquement, vous vérifiez et acceptez. Le mode Automatique peut faire des changements adaptés après un nouveau bilan global. La séance en cours reste inchangée.",
+    "logBody": "Le pavé numérique intégré facilite la modification des charges et des répétitions. Touchez une mesure d’entraînement pour changer l’information affichée.",
+    "tourBody": "Ouvrez la visite guidée depuis l’aide ou l’écran d’abonnement. Elle montre comment enregistrer une séance, utiliser le minuteur d’entretien du corps et suivre vos progrès.",
+    "health": "Health Connect",
+    "healthSetupBody": "Ouvrez Paramètres → Paramètres de l’application → Health Connect. Activez import et export séparément et autorisez les données souhaitées. La disponibilité dépend de la compatibilité du téléphone. Arrêtez l’import ou l’export ici et gérez les autorisations dans Health Connect.",
+    "healthSharingBody": "L’import récupère les entraînements et sessions de sommeil des quatre dernières semaines depuis d’autres applications. Les données sont actualisées à l’ouverture de l’application et une fois par jour en arrière-plan si votre appareil le permet et si vous autorisez la lecture en arrière-plan. Le bouton d’import des paramètres reste disponible. Les séances apparaissent avec leur source dans l’historique.\n\nL’export écrit les séances GymTracker terminées et les données disponibles de fréquence cardiaque, calories actives, distance, pas et parcours selon les autorisations accordées. Les autres applications les affichent selon leurs possibilités.",
+    "healthDataBody": "Ouvrez une séance importée dans l’historique puis affichez son parcours. Celui d’une autre application peut nécessiter une autorisation distincte. Toutes les séances n’ont pas de parcours ou toutes les mesures.\n\nLes données importées sont enregistrées sur le téléphone. Les résumés du sommeil et des autres activités peuvent être envoyés au service d’IA pour les bilans du Coach. Health Connect ne remplace pas une sauvegarde.",
+    "fixBody": "Votre choix d’échauffement précédent s’affiche avec la bonne image et dans la langue actuelle de l’application. Les mises en évidence de la visite guidée ont également été affinées.",
+    "skip": "Aller au contenu",
+    "top": "Retour en haut",
+    "eyebrow": "Aperçu · Mise à jour à venir",
+    "weeklyTitle": "Bilan hebdomadaire du coach",
+    "activitiesTitle": "Autres entraînements et GPS",
+    "highlightCoach": "Le coach examinera vos séances sur une période plus longue et proposera une priorité pour la suite.",
+    "highlightActivities": "Marche, course et vélo rejoindront le même historique, avec des parcours GPS pour les activités extérieures compatibles.",
+    "highlightLogging": "Un pavé numérique facilitera la saisie et vous pourrez choisir les mesures affichées pendant la séance.",
+    "subscriptionLink": "Qu’est-ce que le modèle d’abonnement change pour moi ?",
+    "historyTitle": "Votre historique reste consultable",
+    "historyLead": "Vous pouvez consulter votre historique d’entraînement après la fin de l’essai ou de l’abonnement.",
+    "legacyTitle": "Saisie de base sur l’installation d’origine",
+    "legacyLead": "Si vous utilisiez la version gratuite avec publicité lors de la mise à jour de transition, la saisie de base des séances de musculation reste disponible sur l’installation d’origine. Cet accès ne se transfère pas en cas de réinstallation ou de changement de téléphone.",
+    "featuresTitle": "Où trouver les nouvelles fonctions ?",
+    "workoutTitle": "Écran d’entraînement et visite guidée",
+    "metricsLead": "Pendant une séance, touchez une mesure pour changer l’information affichée.",
+    "healthLead": "Importez les entraînements et le sommeil d’autres apps ou exportez les séances GymTracker terminées. Activez l’importation et l’exportation séparément.",
+    "smallerTitle": "Améliorations mineures",
+    "captionFi": "Capture d’écran en finnois",
+    "workoutDetails": "Pavé numérique et contenu de la visite",
+    "healthDetails": "Autorisations, synchronisation et utilisation des données",
+    "activitiesPath": "Entraînement → Autres entraînements → Choisir une activité",
+    "coachPath": "Entraînement → ⋮ → Retour du coach",
+    "tourPath": "Aide → Découvrir GymTracker / Abonnement GymTracker → Découvrir GymTracker",
+    "healthPath": "Paramètres → Paramètres de l'application → Health Connect"
+  },
+  "pt-PT": {
+    "language": "Idioma",
+    "title": "Novidades no GymTracker",
+    "uiTitle": "Registo de treinos mais simples",
+    "subscriptionTitle": "O que muda para mim com o novo modelo de subscrição?",
+    "paidTitle": "Tenho uma subscrição ou acesso vitalício",
+    "paidBody": "A tua subscrição ativa ou o teu acesso vitalício mantém-se. Se a compra não aparecer, restaura-a no ecrã de subscrição com a conta Google Play que usaste na compra.",
+    "freeTitle": "Uso a versão gratuita anterior",
+    "freeBody": "Só as instalações existentes que usavam o modo gratuito com anúncios na transição mantêm o registo básico de treinos de ginásio com anúncios. O direito mantém-se nas atualizações, mas não passa por cópia de segurança, reinstalação, limpeza dos dados ou mudança de telemóvel. Uma subscrição acrescenta todas as funções; quando termina, o acesso gratuito conservado mantém-se na instalação original.",
+    "oldTrialTitle": "O meu período experimental anterior ainda está ativo",
+    "oldTrialBody": "O período experimental local continua até à data de fim original. Depois, precisas de acesso válido para iniciar um novo treino. A atualização não inicia outro período experimental.",
+    "newTitle": "Sou novo utilizador ou quero subscrever",
+    "newBody": "Escolhe um plano mensal ou anual. O Google Play apresenta o preço e a oferta de experimentação disponível, se existir, antes de confirmares a subscrição.",
+    "renewal": "A subscrição renova-se automaticamente ao preço apresentado, a menos que a canceles no Google Play.",
+    "trialOffer": "O período experimental gratuito de 30 dias está disponível para utilizadores elegíveis. Cancela durante o período experimental no Google Play para evitar o primeiro pagamento.",
+    "dataTitle": "Histórico e cópias de segurança",
+    "dataBody": "Após o período experimental ou a subscrição, podes consultar o histórico e exportar e restaurar cópias manualmente. Novos treinos exigem uma subscrição ativa, salvo se tiveres um direito anterior válido. O cancelamento mantém o acesso até ao fim do período concedido. Podes concluir um treino que já esteja em curso.",
+    "caption": "Imagem da aplicação em inglês",
+    "alt": "Ecrã de treino do GymTracker, com opções para iniciar o próximo treino planeado ou abrir Outros treinos.",
+    "routeTitle": "Percurso e resumo",
+    "routeBody": "Nas atividades ao ar livre compatíveis, podes registar um percurso GPS e acompanhar a distância e o ritmo. Ativa o GPS antes de começares e concede a permissão de localização para guardar o percurso. O treino concluído e as métricas disponíveis ficam no histórico.",
+    "activitiesFinishBody": "Se houver distância GPS guardada, terminar abre diretamente o resumo. Sem distância GPS, a aplicação pode pedir uma distância manual. Escolha Não voltar a mostrar e reative a pergunta com Perguntar no fim do treino. No resumo pode corrigir a distância e adicionar notas. Só aparecem medições disponíveis.",
+    "coachTitle": "Avaliações, feedback semanal e ajustes ao programa",
+    "coachIntro": "O feedback semanal do treinador analisa os teus treinos ao longo de um período mais alargado. Recebes uma avaliação e uma prioridade para o período seguinte. A análise também pode considerar o treino aeróbico, o aquecimento e as sessões de cuidado corporal que registaste.",
+    "coachBody": "O questionário semanal pergunta pela recuperação e por como sentiu a semana. O feedback semanal do Coach mostra a avaliação. A IA requer Internet e usa a informação disponível.\n\nOs ajustes ao programa afetam sessões futuras. Desativado impede alterações. Em Apenas sugestões revê e aceita. Automático pode fazer mudanças adequadas após uma nova avaliação completa. A sessão ativa mantém-se.",
+    "logBody": "O teclado numérico integrado torna mais fácil alterar pesos e repetições. Toca numa métrica para mudar a informação apresentada.",
+    "tourBody": "Abre a visita guiada na Ajuda ou no ecrã de subscrição. Vê como registar um treino, usar o temporizador de cuidado corporal e acompanhar o teu progresso.",
+    "health": "Health Connect",
+    "healthSetupBody": "Abra Definições → Definições da aplicação → Health Connect. Ative importação e exportação separadamente e autorize os dados pretendidos. A disponibilidade depende do suporte do telemóvel. Pare aqui a importação ou exportação e gira permissões no Health Connect.",
+    "healthSharingBody": "A importação obtém treinos e sessões de sono das últimas quatro semanas de outras aplicações. Os dados são atualizados ao abrir a aplicação e uma vez por dia em segundo plano se o dispositivo o permitir e autorizar a leitura em segundo plano. Também pode usar o botão de importação nas definições. As sessões aparecem no histórico com a origem.\n\nA exportação grava sessões GymTracker concluídas e dados disponíveis de frequência cardíaca, calorias ativas, distância, passos e percursos conforme as permissões. Outras aplicações mostram os dados segundo o seu suporte.",
+    "healthDataBody": "Abra uma sessão importada no histórico e escolha mostrar o percurso. O de outra aplicação pode exigir permissão separada. Nem todas as sessões têm percurso ou todas as medições.\n\nOs dados importados ficam guardados no telemóvel. Os resumos de sono e outras atividades podem ser enviados ao serviço de IA para avaliações do Coach. O Health Connect não substitui uma cópia de segurança.",
+    "fixBody": "A opção de aquecimento que escolheste anteriormente aparece com a imagem correta e no idioma atual da aplicação. Também aperfeiçoámos os destaques da visita guiada.",
+    "skip": "Saltar para o conteúdo",
+    "top": "Voltar ao topo",
+    "eyebrow": "Antevisão · Atualização a caminho",
+    "weeklyTitle": "Feedback semanal do treinador",
+    "activitiesTitle": "Outros treinos e GPS",
+    "highlightCoach": "O treinador analisará os teus treinos ao longo do tempo e sugerirá uma prioridade para o próximo período.",
+    "highlightActivities": "Caminhadas, corridas e passeios de bicicleta ficarão no mesmo histórico, com percursos GPS nas atividades ao ar livre compatíveis.",
+    "highlightLogging": "Um teclado numérico facilitará o registo e poderás escolher as métricas apresentadas durante o treino.",
+    "subscriptionLink": "Como me afeta o modelo de subscrição?",
+    "historyTitle": "O histórico continua disponível",
+    "historyLead": "Podes consultar o histórico de treinos depois de terminar o período experimental ou a subscrição.",
+    "legacyTitle": "Registo básico na instalação original",
+    "legacyLead": "Se usavas a versão gratuita com anúncios na altura da atualização de transição, podes continuar a fazer registos básicos dos treinos de ginásio na instalação original. O acesso não é transferido se reinstalares a app ou mudares de telemóvel.",
+    "featuresTitle": "Onde vou encontrar as novas funcionalidades?",
+    "workoutTitle": "Ecrã de treino e visita guiada",
+    "metricsLead": "Durante o treino, toca numa métrica para alterar a informação apresentada.",
+    "healthLead": "Importa treinos e dados de sono de outras apps ou exporta treinos concluídos no GymTracker. Ativa a importação e a exportação em separado.",
+    "smallerTitle": "Melhorias menores",
+    "captionFi": "Captura de ecrã em finlandês",
+    "workoutDetails": "Teclado numérico e conteúdo da visita",
+    "healthDetails": "Permissões, sincronização e utilização de dados",
+    "activitiesPath": "Treino → Outros treinos → Escolher atividade",
+    "coachPath": "Treino → ⋮ → Feedback do treinador",
+    "tourPath": "Ajuda → Conhece o GymTracker / Subscrição GymTracker → Conhece o GymTracker",
+    "healthPath": "Definições → Definições da aplicação → Health Connect"
+  },
+  "pl": {
+    "language": "Język",
+    "title": "Co nowego w GymTrackerze?",
+    "uiTitle": "Łatwiejsze zapisywanie treningów",
+    "subscriptionTitle": "Co oznacza dla mnie nowy model subskrypcji?",
+    "paidTitle": "Mam subskrypcję lub dostęp dożywotni",
+    "paidBody": "Twoja aktywna subskrypcja lub dostęp dożywotni nadal obowiązują. Jeśli zakupu nie widać, przywróć go na ekranie subskrypcji, używając konta Google Play, z którego dokonano zakupu.",
+    "freeTitle": "Korzystam z dotychczasowej darmowej wersji",
+    "freeBody": "Tylko istniejące instalacje korzystające w momencie przejścia z trybu bezpłatnego z reklamami zachowują podstawowe zapisywanie treningów na siłowni z reklamami. Uprawnienie pozostaje po aktualizacji, ale nie przenosi się przez kopię zapasową, ponowną instalację, wyczyszczenie danych ani zmianę telefonu. Subskrypcja dodaje wszystkie funkcje; po jej wygaśnięciu zachowany bezpłatny dostęp pozostaje w pierwotnej instalacji.",
+    "oldTrialTitle": "Mój dotychczasowy okres próbny nadal trwa",
+    "oldTrialBody": "Dotychczasowy lokalny okres próbny trwa do pierwotnej daty zakończenia. Później do rozpoczęcia nowego treningu potrzebujesz ważnego dostępu. Aktualizacja nie uruchamia kolejnego okresu próbnego.",
+    "newTitle": "Jestem nowym użytkownikiem lub chcę wykupić subskrypcję",
+    "newBody": "Wybierz plan miesięczny lub roczny. Google Play wyświetli cenę i ewentualną ofertę próbną przed potwierdzeniem subskrypcji.",
+    "renewal": "Subskrypcja odnawia się automatycznie po wyświetlonej cenie, chyba że anulujesz ją w Google Play.",
+    "trialOffer": "Bezpłatny okres próbny trwający 30 dni jest dostępny dla uprawnionych użytkowników. Anuluj go w Google Play w trakcie okresu próbnego, aby uniknąć pierwszej opłaty.",
+    "dataTitle": "Historia i kopie zapasowe",
+    "dataBody": "Po zakończeniu próby lub subskrypcji możesz przeglądać historię oraz ręcznie eksportować i przywracać kopie zapasowe. Nowe treningi wymagają aktywnej subskrypcji, chyba że masz nadal ważne wcześniejsze uprawnienia. Anulowanie zachowuje dostęp do końca przyznanego okresu. Możesz dokończyć już rozpoczęty trening.",
+    "caption": "Zrzut ekranu aplikacji w języku angielskim",
+    "alt": "Ekran treningu GymTrackera z opcją rozpoczęcia następnego zaplanowanego treningu lub otwarcia innych treningów.",
+    "routeTitle": "Trasa i podsumowanie",
+    "routeBody": "Podczas obsługiwanych aktywności na świeżym powietrzu możesz zapisać trasę GPS oraz śledzić dystans i tempo. Przed rozpoczęciem włącz GPS i zezwól na dostęp do lokalizacji, jeśli chcesz zapisać trasę. Zakończoną aktywność i dostępne pomiary znajdziesz w historii.",
+    "activitiesFinishBody": "Jeśli zapisano dystans GPS, zakończenie od razu otwiera podsumowanie. Bez dystansu GPS aplikacja może poprosić o ręczny wpis. Wybierz Nie pokazuj ponownie i przywróć pytanie ustawieniem Pytaj po treningu. W podsumowaniu możesz poprawić dystans i dodać notatki. Wyświetlane są tylko dostępne pomiary.",
+    "coachTitle": "Oceny, tygodniowa opinia i dostosowanie planu",
+    "coachIntro": "Cotygodniowe podsumowanie trenera uwzględnia treningi z dłuższego okresu. Otrzymasz ocenę oraz jeden priorytet na kolejny okres. Trener może wziąć pod uwagę także zapisane treningi aerobowe, rozgrzewki i sesje dbania o ciało.",
+    "coachBody": "Ankieta tygodniowa pyta o regenerację i odczucia z tygodnia. Tygodniowa informacja od Trenera pokazuje ocenę. AI wymaga internetu i używa dostępnych informacji.\n\nZmiany planu dotyczą przyszłych sesji. Wyłączone je blokuje. W Tylko sugestie sprawdzasz je i akceptujesz. Automatycznie może wprowadzić odpowiednie zmiany po nowej pełnej ocenie. Trwający trening pozostaje taki sam.",
+    "logBody": "Wbudowana klawiatura numeryczna ułatwia zmianę ciężaru i liczby powtórzeń. Dotknij wskaźnika treningu, aby zmienić wyświetlane dane.",
+    "tourBody": "Otwórz przewodnik w Pomocy lub na ekranie subskrypcji. Zobaczysz, jak zapisać trening, używać minutnika do ćwiczeń wspierających ciało i śledzić postępy.",
+    "health": "Health Connect",
+    "healthSetupBody": "Otwórz Ustawienia → Ustawienia aplikacji → Health Connect. Włącz import i eksport osobno i nadaj uprawnienia do wybranych danych. Dostępność zależy od obsługi Health Connect w telefonie. Tutaj zatrzymasz import lub eksport; uprawnieniami zarządzisz w Health Connect.",
+    "healthSharingBody": "Import pobiera treningi i sesje snu innych aplikacji z ostatnich czterech tygodni. Dane są aktualizowane przy otwieraniu aplikacji i raz dziennie w tle, jeśli urządzenie to obsługuje i zezwolisz na odczyt w tle. Możesz też użyć przycisku importu w ustawieniach. Treningi pojawiają się w historii ze źródłem.\n\nEksport zapisuje ukończone treningi GymTracker oraz dostępne dane tętna, aktywnych kalorii, dystansu, kroków i tras zgodnie z uprawnieniami. Inne aplikacje wyświetlają je według własnych możliwości.",
+    "healthDataBody": "Otwórz importowany trening w historii i wybierz pokazanie trasy. Trasa innej aplikacji może wymagać osobnego uprawnienia. Nie wszystkie sesje mają trasę lub komplet pomiarów.\n\nDane importowane są zapisywane w telefonie. Podsumowania snu i innych aktywności mogą być wysyłane do usługi AI na potrzeby oceny Trenera. Health Connect nie zastępuje kopii zapasowej.",
+    "fixBody": "Wcześniej wybrana rozgrzewka wyświetla się z właściwym obrazem i w aktualnym języku aplikacji. Poprawiliśmy także wyróżnienia w przewodniku.",
+    "skip": "Przejdź do treści",
+    "top": "Wróć na górę",
+    "eyebrow": "Zapowiedź · Aktualizacja już wkrótce",
+    "weeklyTitle": "Cotygodniowa opinia trenera",
+    "activitiesTitle": "Inne treningi i GPS",
+    "highlightCoach": "Trener przeanalizuje treningi z dłuższego okresu i zaproponuje jeden priorytet na kolejny etap.",
+    "highlightActivities": "Spacery, bieganie i jazda na rowerze trafią do wspólnej historii, a obsługiwane aktywności na zewnątrz zapiszą trasę GPS, jeśli ją włączysz.",
+    "highlightLogging": "Klawiatura numeryczna ułatwi zapisywanie wyników, a podczas treningu wybierzesz wyświetlane wskaźniki.",
+    "subscriptionLink": "Jak model subskrypcji wpłynie na mnie?",
+    "historyTitle": "Historia treningów pozostaje dostępna",
+    "historyLead": "Historię treningów możesz przeglądać po zakończeniu okresu próbnego lub subskrypcji.",
+    "legacyTitle": "Podstawowe zapisywanie treningów w pierwotnej instalacji",
+    "legacyLead": "Jeśli w chwili aktualizacji wprowadzającej nowy model korzystasz z bezpłatnej wersji z reklamami, możesz nadal zapisywać podstawowe treningi na siłowni w pierwotnej instalacji. Dostęp nie przechodzi po ponownej instalacji ani po zmianie telefonu.",
+    "featuresTitle": "Gdzie znajdę nowe funkcje?",
+    "workoutTitle": "Ekran treningu i przewodnik",
+    "metricsLead": "W trakcie treningu dotknij wskaźnika, aby zmienić wyświetlane informacje.",
+    "healthLead": "Importuj treningi i dane o śnie z innych aplikacji lub eksportuj ukończone treningi GymTracker. Import i eksport włącza się osobno.",
+    "smallerTitle": "Drobniejsze usprawnienia",
+    "captionFi": "Zrzut ekranu po fińsku",
+    "workoutDetails": "Klawiatura numeryczna i zawartość przewodnika",
+    "healthDetails": "Uprawnienia, synchronizacja i wykorzystanie danych",
+    "activitiesPath": "Trening → Inne treningi → Wybierz aktywność",
+    "coachPath": "Trening → ⋮ → Opinia trenera",
+    "tourPath": "Pomoc → Poznaj GymTracker / Subskrypcja GymTracker → Poznaj GymTracker",
+    "healthPath": "Ustawienia → Ustawienia aplikacji → Health Connect"
+  }
+}
+  </script>
+  <script>
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
+function renderHighlights(t) {
+  const e = escapeHtml;
+  return [
+    [t.weeklyTitle, t.highlightCoach],
+    [t.activitiesTitle, t.highlightActivities],
+    [t.uiTitle, t.highlightLogging]
+  ].map(([title, description]) =>
+    '<li><h2>' + e(title) + '</h2><p>' + e(description) + '</p></li>'
+  ).join('\n');
+}
+
+function renderSections(t, lang, open = new Set()) {
+  const e = escapeHtml;
+  const paragraphs = (...blocks) => blocks
+    .flatMap(block => block.split(/\n\s*\n/))
+    .map(block => '<p>' + e(block.trim()).replaceAll('\n', '<br>') + '</p>')
+    .join('\n');
+  const detail = (id, title, ...blocks) =>
+    '<details id="' + id + '"' + (open.has(id) ? ' open' : '') + '><summary><span>' + e(title) +
+    '</span></summary>\n' + paragraphs(...blocks) + '</details>';
+  const panel = (title, body) =>
+    '<div class="panel"><h3>' + e(title) + '</h3>' + paragraphs(body) + '</div>';
+  const section = (id, title, body) =>
+    '<section id="' + id + '" aria-labelledby="' + id + '-title">\n<h2 id="' + id + '-title">' +
+    e(title) + '</h2>\n' + body + '\n</section>';
+  const feature = (id, title, lead, body) =>
+    '<section class="feature panel" id="' + id + '" aria-labelledby="' + id + '-title">\n<h3 id="' + id +
+    '-title">' + e(title) + '</h3>\n' + lead + body + '\n</section>';
+  const path = text => '<p class="path">' + e(text) + '</p>\n';
+
+  const subscription = '<div class="cards key-answers">\n' +
+    panel(t.historyTitle, t.historyLead) + '\n' + panel(t.legacyTitle, t.legacyLead) +
+    '\n</div>\n<div class="stack">\n' + [
+      detail('paid', t.paidTitle, t.paidBody),
+      detail('legacy-free', t.freeTitle, t.freeBody),
+      detail('legacy-trial', t.oldTrialTitle, t.oldTrialBody),
+      detail('new-plan', t.newTitle, t.newBody, t.renewal, t.trialOffer),
+      detail('history-backups', t.dataTitle, t.dataBody)
+    ].join('\n') + '\n</div>';
+
+  const image = lang === 'fi' ? '../ohje/assets/01-treeni.webp' : 'workout-en.jpg';
+  const activities = '<div class="feature-with-image"><div>\n' +
+    path(t.activitiesPath) + paragraphs(t.highlightActivities) + '\n' +
+    detail('workout-summary', t.routeTitle, t.routeBody, t.activitiesFinishBody) +
+    '\n</div><figure><div class="phone"><img src="' + image + '" alt="' + e(t.alt) +
+    '" loading="lazy" decoding="async"></div><figcaption>' + e(lang === 'fi' ? t.captionFi : t.caption) +
+    '</figcaption></figure></div>';
+  const features = '<div class="stack features">\n' + [
+    feature('activities', t.activitiesTitle, '', activities),
+    feature('coach', t.weeklyTitle, path(t.coachPath) + paragraphs(t.highlightCoach),
+      detail('coach-controls', t.coachTitle, t.coachIntro, t.coachBody)),
+    feature('interface', t.workoutTitle, paragraphs(t.metricsLead) + path(t.tourPath),
+      detail('workout-guide', t.workoutDetails, t.logBody, t.tourBody)),
+    feature('health-connect', t.health, paragraphs(t.healthLead) + path(t.healthPath),
+      detail('health-connect-details', t.healthDetails, t.healthSetupBody, t.healthSharingBody, t.healthDataBody))
+  ].join('\n') + '\n</div>';
+
+  return [
+    section('subscription', t.subscriptionTitle, subscription),
+    section('features', t.featuresTitle, features),
+    section('smaller-improvements', t.smallerTitle, '<div class="panel">' + paragraphs(t.fixBody) + '</div>')
+  ].join('\n');
+}
+
+    const messages = JSON.parse(document.getElementById('translations').textContent);
+    const language = document.getElementById('language');
+    const sections = document.getElementById('sections');
+    const highlights = document.getElementById('highlights');
+    function supportedLanguage(tag) {
+      const base = tag?.toLowerCase().split(/[-_]/)[0];
+      const key = base === 'pt' ? 'pt-PT' : base;
+      return Object.hasOwn(messages, key) ? key : undefined;
+    }
+    function showLanguage(key) {
+      const copy = messages[key];
+      const open = new Set(Array.from(sections.querySelectorAll('details[open]'), item => item.id));
+      document.documentElement.lang = key;
+      document.title = copy.title + ' · GymTracker';
+      language.value = key;
+      for (const [id, field] of Object.entries({
+        skip:'skip', 'language-label':'language', eyebrow:'eyebrow', title:'title',
+        'subscription-link-text':'subscriptionLink', 'top-link':'top'
+      })) document.getElementById(id).textContent = copy[field];
+      if (sections.dataset.language !== key) {
+        highlights.innerHTML = renderHighlights(copy);
+        sections.innerHTML = renderSections(copy, key, open);
+        sections.dataset.language = key;
+      }
+    }
+    const url = new URL(location.href);
+    const initial = supportedLanguage(url.searchParams.get('lang')) ||
+      (navigator.languages || [navigator.language]).map(supportedLanguage).find(Boolean) || 'fi';
+    showLanguage(initial);
+    if (location.hash) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) requestAnimationFrame(() => target.scrollIntoView());
+    }
+    language.addEventListener('change', () => {
+      showLanguage(language.value);
+      const next = new URL(location.href);
+      next.searchParams.set('lang', language.value);
+      try { history.replaceState(null, '', next); } catch (_) { /* The selector also works in local files. */ }
+    });
+  </script>
+  <script data-goatcounter="https://gymtracker.goatcounter.com/count"
+          data-goatcounter-settings='{"path":"/gymtracker/changes/"}'
+          async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
