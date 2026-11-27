@@ -1,0 +1,8 @@
+exclude:
+  - content
+  - tools
+  - wrangler.json
+  - README.md
+  - ohje/README.md
+  - ohje/generate.py
+  - ohje/validate.py

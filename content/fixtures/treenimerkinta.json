@@ -1,0 +1,44 @@
+{
+  "content_id": "preview-training-log",
+  "version": 1,
+  "status": "fixture",
+  "language": "fi",
+  "market": "FI",
+  "slug": "harjoitusmerkinta",
+  "title": "Harjoitusmerkintä yhdellä silmäyksellä",
+  "description": "Testiartikkeli GymTrackerin blogin rakenteen, kuvan ja lähteiden tarkistamiseen.",
+  "category": "Treenipäiväkirja",
+  "published": "2026-11-27",
+  "updated": "2026-11-27",
+  "image": {
+    "path": "/ohje/assets/04-painon-syotto.webp",
+    "alt": "Painon syöttönäkymä GymTrackerin käyttöohjeen testiversiossa"
+  },
+  "sections": [
+    {
+      "heading": "Mitä merkinnästä näkee?",
+      "paragraphs": [
+        "Kuvitteellisessa treenimerkinnässä liikkeen nimi, toistot ja paino löytyvät samasta rivistä. Seuraavalla kerralla merkinnästä näkee, mitä edellisessä treenissä tehtiin."
+      ]
+    },
+    {
+      "heading": "Esimerkki treenipäiväkirjasta",
+      "paragraphs": [
+        "Esimerkkirivi voisi olla: jalkaprässi, 8 toistoa, 40 kg. Luvut havainnollistavat merkintätapaa."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "GymTrackerin kuvallinen käyttöohje",
+      "url": "/ohje/#treeni"
+    }
+  ],
+  "sources": [
+    {
+      "label": "GymTrackerin käyttöohje",
+      "url": "https://gymtracker.fi/ohje/"
+    }
+  ],
+  "cta": "Katso GymTracker Google Playssa"
+}

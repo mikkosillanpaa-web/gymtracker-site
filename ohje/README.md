@@ -1,6 +1,6 @@
 # GymTrackerin kuvallinen käyttöohje
 
-Julkinen osoite: https://donturexdev.fi/gymtracker/ohje/
+Ensisijainen osoite: https://gymtracker.fi/ohje/
 
 Staattinen suomenkielinen sivusto: 15 aihealuetta ja 62 avattavaa ohjekohtaa.
 Sisältö käsittää ohjelmat ja manuaalisen hallinnan, liikekirjaston, voimatreenin,
