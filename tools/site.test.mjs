@@ -1,6 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { createHash } from 'node:crypto';
-import { access, cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -9,7 +8,21 @@ import { build, validateArticle } from './build.mjs';
 const source = new URL('../', import.meta.url);
 const fixture = JSON.parse(await readFile(new URL('content/fixtures/treenimerkinta.json', source), 'utf8'));
 const fixturePath = 'blog/harjoitusmerkinta/index.html';
-const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const play = 'https://play.google.com/store/apps/details?id=fi.donturexdev.gymtracker';
+
+async function checkPlayDistribution(out) {
+  const entries = await readdir(out, { recursive: true });
+  assert.ok(!entries.some(entry => /\.apk$/i.test(entry)), 'APK files must stay out of the build');
+  assert.equal(await readFile(join(out, '_redirects'), 'utf8'), `/downloads/GymTracker.apk ${play} 302\n`);
+  assert.doesNotMatch(await readFile(join(out, 'sitemap.xml'), 'utf8'), /GymTracker\.apk/i);
+
+  for (const entry of entries.filter(entry => entry.endsWith('.html'))) {
+    const html = await readFile(join(out, entry), 'utf8');
+    assert.doesNotMatch(html, /\bhref=["'][^"']*\.apk(?:[?#][^"']*)?["']/i, entry);
+  }
+  assert.match(await readFile(join(out, 'index.html'), 'utf8'),
+    /href="https:\/\/play\.google\.com\/store\/apps\/details\?id=fi\.donturexdev\.gymtracker(?:["&])/);
+}
 
 async function localFile(root, from, url) {
   const target = new URL(url, new URL(from, 'https://gymtracker.fi'));
@@ -67,8 +80,9 @@ test('production build preserves critical routes, excludes fixtures and lists li
     const html = await checkHtml(out, file, route);
     assert.ok(html.includes('rel="canonical" href="https://gymtracker.fi' + route + '"'));
   }
-  assert.equal(sha256(await readFile(join(out, 'downloads/GymTracker.apk'))),
-    sha256(await readFile(new URL('downloads/GymTracker.apk', source))));
+  await checkPlayDistribution(out);
+  assert.equal(await readFile(join(out, 'downloads/help.txt'), 'utf8'),
+    await readFile(new URL('downloads/help.txt', source), 'utf8'));
   assert.match(await readFile(join(out, '404.html'), 'utf8'), /name="robots" content="noindex/);
   assert.ok(!sitemap.includes('harjoitusmerkinta'));
   assert.match(await readFile(join(out, 'privacy/gymtracker-data-deletion.html'), 'utf8'),
@@ -81,6 +95,7 @@ test('preview renders the labeled fixture, stops tracking and keeps the fixture 
   const out = join(folder, 'dist');
   await assert.rejects(build({ out, fixtures: true }), /requires|require preview/);
   await build({ out, preview: true, fixtures: true });
+  await checkPlayDistribution(out);
   assert.match(await readFile(join(out, 'blog/index.html'), 'utf8'), /harjoitusmerkinta/);
   const html = await checkHtml(out, fixturePath, '/blog/harjoitusmerkinta/');
   assert.match(html, /Testiartikkeli · vain esikatseluun/);

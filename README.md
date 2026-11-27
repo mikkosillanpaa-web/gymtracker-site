@@ -47,6 +47,10 @@ Kun tuotantosiirto on hyväksytty ja toteutettu, hyväksytty site-mainin päivit
 julkaistaan Cloudflareen. Valvo URL:ien, canonicalien, assettien ja sitemapin
 vastauksia deployn jälkeen. Cloudflare-deploy on erillinen vaihe CI-testeistä.
 
-Nykyisen suoran APK:n URL on /downloads/GymTracker.apk. Tiedoston manifestissa
-on versio 1.0 / versionCode 1. Tarkistus tehtiin lukemalla pakettitiedot ilman
-asennusta. Latauspolku säilytetään, eikä sitä nosteta blogin CTA:ksi.
+## Google Play -jakelu
+
+GymTracker jaetaan [Google Playssa](https://play.google.com/store/apps/details?id=fi.donturexdev.gymtracker).
+Vanhasta `/downloads/GymTracker.apk`-reitistä syntyy buildin `_redirects`-tiedostoon
+HTTP 302 Play-listaukseen. APK on poistettu lähdepuusta ja APK-tiedostot rajataan
+pois kummastakin buildista. Cloudflare-previewssa ohjaus on testattavissa erillään
+nykyisestä GitHub Pages -tuotannosta. Tuotannossa ohjaus tulee voimaan domainvaihdossa.

@@ -26,7 +26,7 @@ const fields = ['content_id', 'version', 'status', 'language', 'market', 'slug',
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 const assetDirs = new Set(['changes', 'downloads', 'images', 'ohje', 'privacy']);
-const publicExtensions = /\.(?:html|css|js|webp|png|jpe?g|svg|ico|txt|apk)$/i;
+const publicExtensions = /\.(?:html|css|js|webp|png|jpe?g|svg|ico|txt)$/i;
 
 function plain(value, limit) {
   return typeof value === 'string' && value.trim() === value && value.length > 0 && value.length <= limit;
@@ -258,6 +258,7 @@ export async function build({ source = root, out = join(root, 'dist'), preview =
     'https://:worker.:account.workers.dev/*\n  X-Robots-Tag: noindex\n' +
     '/downloads/*\n  X-Robots-Tag: noindex\n';
   await output(out, '/_headers', headers);
+  await output(out, '/_redirects', '/downloads/GymTracker.apk ' + play + ' 302\n');
   if (preview) {
     // Avoid contaminating the live site’s existing analytics with review hits.
     for (const file of ['index.html', 'changes/index.html', 'ohje/index.html', 'privacy/gymtracker-data-deletion.html']) {
