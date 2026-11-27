@@ -121,6 +121,7 @@ test('published translations share an ID, link reciprocally and generate safe st
   await build({ source: clone, out });
   const fiHtml = await checkHtml(out,'blog/artikkeli/index.html','/blog/artikkeli/');
   const enHtml = await checkHtml(out,'blog/en/workout-log/index.html','/blog/en/workout-log/');
+  assert.doesNotMatch(fiHtml, /goatcounter/);
   assert.match(fiHtml, /hreflang="en" href="https:\/\/gymtracker\.fi\/blog\/en\/workout-log\/"/);
   assert.match(enHtml, /hreflang="fi" href="https:\/\/gymtracker\.fi\/blog\/artikkeli\/"/);
   assert.match(fiHtml, /Treenipäiväkirja &lt;esimerkki&gt;/);
@@ -128,6 +129,12 @@ test('published translations share an ID, link reciprocally and generate safe st
   assert.equal(data['@type'], 'BlogPosting');
   assert.equal(data.dateModified, '2026-11-28');
   assert.match(await readFile(join(out, 'sitemap.xml'), 'utf8'), /blog\/en\/workout-log\/<\/loc><lastmod>2026-11-28/);
+  const metrics = join(folder, 'metrics');
+  await build({ source: clone, out: metrics, articleMetrics: true });
+  const instrumented = await checkHtml(metrics, 'blog/artikkeli/index.html', '/blog/artikkeli/');
+  assert.match(instrumented, /data-goatcounter="https:\/\/gymtracker\.goatcounter\.com\/count"/);
+  assert.match(instrumented, /data-goatcounter-click="outbound\/play\/blog\/artikkeli\/"/);
+  assert.doesNotMatch(await readFile(join(metrics, 'blog/index.html'), 'utf8'), /goatcounter/);
   await writeFile(join(clone,'content/articles/duplicate.json'), JSON.stringify({ ...article, slug:'other' }));
   await assert.rejects(build({ source: clone, out }), /Duplicate article/);
 });
@@ -141,4 +148,30 @@ test('artifact validation rejects private fields, unsafe links, invalid dates, s
     { image: { path:'/images/ic_GymApp.png', alt:'' } },
   ];
   for (const patch of invalid) assert.throws(() => validateArticle({...fixture,...patch},'fixture','test'));
+});
+
+test('First article draft is opt-in, unindexed, and absent from all production and fixture-only builds', async t => {
+  const folder = await mkdtemp(join(tmpdir(), 'gymtracker-blog-draft-'));
+  t.after(() => rm(folder, { recursive: true, force: true }));
+  const route = '/blog/treenivihko-excel-vai-treenisovellus/';
+  const file = route.slice(1) + 'index.html';
+  await assert.rejects(build({ out: folder, drafts: true }), /Draft articles require preview/);
+  await assert.rejects(build({ out: folder, preview: true, articleMetrics: true }), /metrics require production/);
+  await build({ out: join(folder,'production'), articleMetrics: true });
+  await assert.rejects(access(join(folder,'production',file)), { code: 'ENOENT' });
+  assert.doesNotMatch(await readFile(join(folder, 'production', 'sitemap.xml'), 'utf8'), /treenivihko-excel/);
+  await build({ out: join(folder,'fixtures'), preview: true, fixtures: true });
+  await assert.rejects(access(join(folder,'fixtures',file)), { code: 'ENOENT' });
+  const preview = join(folder, 'drafts');
+  const counts = await build({ out: preview, preview: true, drafts: true });
+  assert.equal(counts.drafts, 1);
+  const html = await checkHtml(preview, file, route);
+  assert.match(html, /<title>Treenivihko, Excel vai sovellus\? \| GymTracker<\/title>/);
+  assert.match(html, /Luonnos · vain esikatseluun/);
+  assert.match(html, /noindex, nofollow/);
+  assert.match(html, /Päivä ____ \| Liike ____/);
+  assert.ok(html.includes(play));
+  assert.doesNotMatch(html, /rel="canonical"|<time\b|BlogPosting|goatcounter/);
+  assert.doesNotMatch(await readFile(join(preview, 'sitemap.xml'), 'utf8'), /treenivihko-excel/);
+  assert.match(await readFile(join(preview, 'blog/index.html'), 'utf8'), /treenivihko-excel/);
 });

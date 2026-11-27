@@ -9,11 +9,11 @@ const translations = {
   fi: { blog: 'GymTrackerin blogi', home: 'GymTracker.fi', skip: 'Siirry sisältöön',
     intro: 'Käytännön vinkkejä treenipäiväkirjan pitämiseen ja GymTrackerin käyttöön.',
     empty: 'Artikkeleita ei ole vielä julkaistu.', source: 'Lähteet', related: 'Lue lisää',
-    fixture: 'Testiartikkeli · vain esikatseluun', updated: 'Päivitetty', missing: 'Sivua ei löydy' },
+    fixture: 'Testiartikkeli · vain esikatseluun', draft: 'Luonnos · vain esikatseluun', updated: 'Päivitetty', missing: 'Sivua ei löydy' },
   en: { blog: 'GymTracker blog', home: 'GymTracker.fi', skip: 'Skip to content',
     intro: 'Practical tips for keeping a workout log and using GymTracker.',
     empty: 'No articles have been published yet.', source: 'Sources', related: 'Read more',
-    fixture: 'Test article · preview only', updated: 'Updated', missing: 'Page not found' },
+    fixture: 'Test article · preview only', draft: 'Draft · preview only', updated: 'Updated', missing: 'Page not found' },
 };
 
 function escape(value) {
@@ -22,7 +22,7 @@ function escape(value) {
 }
 
 const fields = ['content_id', 'version', 'status', 'language', 'market', 'slug', 'title',
-  'description', 'category', 'published', 'updated', 'image', 'sections', 'links', 'sources', 'cta'];
+  'meta_title', 'description', 'category', 'published', 'updated', 'image', 'sections', 'links', 'sources', 'cta'];
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 const assetDirs = new Set(['changes', 'downloads', 'images', 'ohje', 'privacy']);
@@ -68,7 +68,9 @@ export function validateArticle(article, status, file) {
       !slugPattern.test(article.slug) || Object.hasOwn(translations, article.slug)) issue('invalid language, market or slug');
   if (!plain(article.title, 115) || !plain(article.description, 165) || !plain(article.category, 60) ||
       !plain(article.cta, 90)) issue('invalid title, description, category or CTA');
-  if (!date(article.published) || !date(article.updated) || article.updated < article.published) issue('invalid date');
+  if (article.meta_title !== undefined && !plain(article.meta_title, 70)) issue('invalid meta title');
+  if (!date(article.updated) || (status === 'draft' ? article.published !== null
+    : !date(article.published) || article.updated < article.published)) issue('invalid date');
   if (!Array.isArray(article.sections) || !article.sections.length || article.sections.length > 40 ||
       !article.sections.every(section => section && Object.keys(section).length === 2 &&
         plain(section.heading, 140) && Array.isArray(section.paragraphs) && section.paragraphs.length &&
@@ -96,7 +98,7 @@ async function readArticles(directory, status) {
     validateArticle(JSON.parse(await readFile(join(directory, name), 'utf8')), status, name)));
 }
 
-function makeLayout({ language, title, description, path, body, preview, alternates = [], image, data }) {
+function makeLayout({ language, title, description, path, body, preview, alternates = [], image, data, analytics = '' }) {
   const copy = translations[language];
   const url = path && origin + path;
   const alternateLinks = alternates.length > 1 ? alternates.map(([lang, route]) =>
@@ -115,7 +117,7 @@ function makeLayout({ language, title, description, path, body, preview, alterna
     (url ? '<meta property="og:url" content="' + url + '">\n' : '') +
     '<meta property="og:image" content="' + origin + escape(socialImage) + '">\n' +
     '<link rel="icon" href="/ohje/assets/icon.webp"><link rel="stylesheet" href="/blog/style.css">' +
-    jsonLd + '</head><body>\n<a class="skip" href="#content">' + copy.skip + '</a>' +
+    jsonLd + analytics + '</head><body>\n<a class="skip" href="#content">' + copy.skip + '</a>' +
     '<header><nav class="wrap"><a class="brand" href="/"><img src="/ohje/assets/icon.webp" width="34" height="34" alt="">' +
     copy.home + '</a><a href="' + languagePath(language) + '">' + copy.blog + '</a>' +
     alternates.filter(([lang]) => lang !== language).map(([lang, route]) =>
@@ -132,9 +134,9 @@ function dateLabel(value, language) {
 function renderList(language, articles, alternateLists, preview) {
   const copy = translations[language];
   const cards = articles.map(article =>
-    '<li class="card"><p class="meta">' + escape(article.category) + ' · ' + dateLabel(article.published, language) +
+    '<li class="card"><p class="meta">' + escape(article.category) + (article.status === 'draft' ? '' : ' · ' + dateLabel(article.published, language)) +
     '</p><h2><a href="' + articlePath(article) + '">' + escape(article.title) + '</a></h2><p>' +
-    escape(article.description) + '</p>' + (article.status === 'fixture' ? '<p class="fixture">' + copy.fixture + '</p>' : '') + '</li>');
+    escape(article.description) + '</p>' + (article.status !== 'published' ? '<p class="fixture">' + copy[article.status] + '</p>' : '') + '</li>');
   return makeLayout({ language, title: copy.blog, description: copy.intro, path: languagePath(language),
     preview, alternates: alternateLists, body: '<h1>' + copy.blog + '</h1><p class="lead">' + copy.intro +
       '</p>' + (cards.length ? '<ul class="cards">' + cards.join('') + '</ul>' : '<p>' + copy.empty + '</p>') });
@@ -146,16 +148,18 @@ function linkList(title, links) {
     escape(link.url) + '">' + escape(link.label) + '</a></li>').join('') + '</ul></section>';
 }
 
-function renderArticle(article, alternates, preview) {
+function renderArticle(article, alternates, preview, articleMetrics) {
   const language = article.language;
   const copy = translations[language];
   const sections = article.sections.map(section => '<section><h2>' + escape(section.heading) +
     '</h2>' + section.paragraphs.map(p => '<p>' + escape(p) + '</p>').join('') + '</section>').join('');
   const figure = article.image ? '<figure><img src="' + escape(article.image.path) + '" alt="' +
     escape(article.image.alt) + '" decoding="async"></figure>' : '';
-  const dates = dateLabel(article.published, language) + (article.updated === article.published ? '' :
-    ' · ' + copy.updated + ' ' + dateLabel(article.updated, language));
+  const dates = article.status === 'draft' ? '' : ' · ' + dateLabel(article.published, language) +
+    (article.updated === article.published ? '' : ' · ' + copy.updated + ' ' + dateLabel(article.updated, language));
   const path = articlePath(article);
+  const metrics = articleMetrics && !preview && article.status === 'published';
+  const analytics = metrics ? '<script data-goatcounter="https://gymtracker.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>' : '';
   const data = article.status === 'published' ? {
     '@context': 'https://schema.org', '@type': 'BlogPosting', mainEntityOfPage: origin + path,
     headline: article.title, description: article.description, inLanguage: language,
@@ -163,13 +167,13 @@ function renderArticle(article, alternates, preview) {
     ...(article.image ? { image: origin + article.image.path } : {}),
     publisher: { '@type': 'Organization', name: 'Donturex Development' },
   } : undefined;
-  return makeLayout({ language, title: article.title + ' · GymTracker', description: article.description,
-    path: article.status === 'fixture' ? null : path, preview, alternates, image: article.image?.path, data,
-    body: '<article class="prose">' + (article.status === 'fixture' ? '<p class="fixture">' + copy.fixture + '</p>' : '') +
-      '<p class="meta">' + escape(article.category) + ' · ' + dates + '</p><h1>' + escape(article.title) +
+  return makeLayout({ language, title: article.meta_title ?? article.title + ' · GymTracker', description: article.description,
+    path: article.status === 'published' ? path : null, preview, alternates, image: article.image?.path, data, analytics,
+    body: '<article class="prose">' + (article.status !== 'published' ? '<p class="fixture">' + copy[article.status] + '</p>' : '') +
+      '<p class="meta">' + escape(article.category) + dates + '</p><h1>' + escape(article.title) +
       '</h1><p class="lead">' + escape(article.description) + '</p>' + figure + sections +
       linkList(copy.related, article.links) + linkList(copy.source, article.sources) +
-      '<p><a class="cta" href="' + play + '">' + escape(article.cta) + '</a></p></article>' });
+      '<p><a class="cta" href="' + play + '"' + (metrics ? ' data-goatcounter-click="outbound/play' + path + '"' : '') + '>' + escape(article.cta) + '</a></p></article>' });
 }
 
 async function output(out, path, content) {
@@ -191,11 +195,15 @@ function checkUnique(articles) {
   }
 }
 
-export async function build({ source = root, out = join(root, 'dist'), preview = false, fixtures = false } = {}) {
+export async function build({ source = root, out = join(root, 'dist'), preview = false, fixtures = false, drafts = false, articleMetrics = false } = {}) {
   if (fixtures && !preview) throw Error('Test articles require preview mode');
+  if (drafts && !preview) throw Error('Draft articles require preview mode');
+  if (articleMetrics && preview) throw Error('Article metrics require production mode');
   const published = await readArticles(join(source, 'content/articles'), 'published');
   const samples = fixtures ? await readArticles(join(source, 'content/fixtures'), 'fixture') : [];
-  const articles = [...published, ...samples].sort((a, b) => b.published.localeCompare(a.published));
+  const draftArticles = drafts ? await readArticles(join(source, 'content/drafts'), 'draft') : [];
+  const articles = [...published, ...samples, ...draftArticles].sort((a, b) =>
+    (b.published ?? b.updated).localeCompare(a.published ?? a.updated));
   checkUnique(articles);
 
   // Validate packages before replacing output. Only explicit public directories are copied.
@@ -233,9 +241,9 @@ export async function build({ source = root, out = join(root, 'dist'), preview =
     await output(out, languagePath(language), renderList(language, articles.filter(a => a.language === language), lists, preview));
   }
   for (const article of articles) {
-    const equivalents = article.status === 'fixture' ? [] : published
+    const equivalents = article.status !== 'published' ? [] : published
       .filter(a => a.content_id === article.content_id).map(a => [a.language, articlePath(a)]);
-    await output(out, articlePath(article), renderArticle(article, equivalents, preview));
+    await output(out, articlePath(article), renderArticle(article, equivalents, preview, articleMetrics));
   }
   await output(out, '/404.html', makeLayout({ language: 'fi', title: 'Sivua ei löydy · GymTracker',
     description: 'GymTrackerin sivua ei löydy.', body: '<h1>Sivua ei löydy</h1><p><a href="/">GymTracker.fi:n etusivu</a></p>',
@@ -268,11 +276,12 @@ export async function build({ source = root, out = join(root, 'dist'), preview =
         .replace('</head>', '<meta name="robots" content="noindex, nofollow"></head>'));
     }
   }
-  return { published: published.length, fixtures: samples.length, routes };
+  return { published: published.length, fixtures: samples.length, ...(drafts ? { drafts: draftArticles.length } : {}), routes };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
-  if (args.some(arg => !['--preview', '--fixtures'].includes(arg))) throw Error('Unknown build flag');
-  console.log(await build({ preview: args.includes('--preview'), fixtures: args.includes('--fixtures') }));
+  if (args.some(arg => !['--preview', '--fixtures', '--drafts', '--article-metrics'].includes(arg))) throw Error('Unknown build flag');
+  console.log(await build({ preview: args.includes('--preview'), fixtures: args.includes('--fixtures'),
+    drafts: args.includes('--drafts'), articleMetrics: args.includes('--article-metrics') }));
 }
