@@ -34,7 +34,7 @@ jobs:
           git -c core.whitespace=cr-at-eol diff --ignore-space-at-eol --exit-code -- ohje/index.html
           python ohje/validate.py
           node --test tools/site.test.mjs
-          node tools/build.mjs
+          node tools/build.mjs --article-metrics
       - name: Deploy and verify the active Worker version
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
