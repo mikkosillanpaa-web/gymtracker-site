@@ -3,6 +3,7 @@ import { access, cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 import { build, validateArticle } from './build.mjs';
 
 const source = new URL('../', import.meta.url);
@@ -112,9 +113,9 @@ test('published translations share an ID, link reciprocally and generate safe st
   t.after(() => rm(folder, { recursive: true, force: true }));
   const clone = join(folder, 'source');
   await cp(source, clone, { recursive: true, filter: path => !/(?:^|[/\\])(?:\.git|dist|node_modules|\.wrangler)$/.test(path) });
-  const article = { ...fixture, content_id:'published-test', status:'published', slug:'artikkeli',
+  const article = { ...fixture, content_id:'published-test', status:'published', slug:'artikkeli', article_metrics:true,
     updated:'2026-11-28', title:'Treenipäiväkirja <esimerkki>' };
-  const en = { ...article, language:'en', market:'GB', slug:'workout-log', title:'Workout log' };
+  const en = { ...article, language:'en', market:'GB', slug:'workout-log', title:'Workout log', article_metrics:false };
   await writeFile(join(clone,'content/articles/fi.json'), JSON.stringify(article));
   await writeFile(join(clone,'content/articles/en.json'), JSON.stringify(en));
   const out = join(folder, 'dist');
@@ -132,9 +133,11 @@ test('published translations share an ID, link reciprocally and generate safe st
   const metrics = join(folder, 'metrics');
   await build({ source: clone, out: metrics, articleMetrics: true });
   const instrumented = await checkHtml(metrics, 'blog/artikkeli/index.html', '/blog/artikkeli/');
-  assert.match(instrumented, /data-goatcounter="https:\/\/gymtracker\.goatcounter\.com\/count"/);
-  assert.match(instrumented, /data-goatcounter-click="outbound\/play\/blog\/artikkeli\/"/);
-  assert.doesNotMatch(await readFile(join(metrics, 'blog/index.html'), 'utf8'), /goatcounter/);
+  assert.ok(instrumented.includes('data-article-metrics="/blog/artikkeli/" hidden'));
+  assert.match(instrumented, /data-play-cta/);
+  assert.ok(instrumented.includes('src="/blog/article-metrics.js"'));
+  assert.doesNotMatch(await readFile(join(metrics, 'blog/index.html'), 'utf8'), /article-metrics/);
+  assert.doesNotMatch(await readFile(join(metrics, 'blog/en/workout-log/index.html'), 'utf8'), /article-metrics/);
   await writeFile(join(clone,'content/articles/duplicate.json'), JSON.stringify({ ...article, slug:'other' }));
   await assert.rejects(build({ source: clone, out }), /Duplicate article/);
 });
@@ -146,32 +149,88 @@ test('artifact validation rejects private fields, unsafe links, invalid dates, s
     { links: [{ label:'Internal', url:'//other.example/' }] },
     { image: { path:'/images/../downloads/file.png', alt:'Image' } },
     { image: { path:'/images/ic_GymApp.png', alt:'' } },
+    { article_metrics: 'true' },
+    { sections: [{ heading:'Example', paragraphs:['Text'], example: ['not a string'] }] },
+    { sections: [{ heading:'Example', paragraphs:['Text'],
+      table:{ caption:'Compare', columns:['Option','Value'], rows:[['Option']] } }] },
   ];
   for (const patch of invalid) assert.throws(() => validateArticle({...fixture,...patch},'fixture','test'));
 });
 
-test('First article draft is opt-in, unindexed, and absent from all production and fixture-only builds', async t => {
-  const folder = await mkdtemp(join(tmpdir(), 'gymtracker-blog-draft-'));
+test('first published article appears once, preserves CTA and excludes drafts or measurement from previews', async t => {
+  const folder = await mkdtemp(join(tmpdir(), 'gymtracker-blog-qa-'));
   t.after(() => rm(folder, { recursive: true, force: true }));
   const route = '/blog/treenivihko-excel-vai-treenisovellus/';
   const file = route.slice(1) + 'index.html';
   await assert.rejects(build({ out: folder, drafts: true }), /Draft articles require preview/);
   await assert.rejects(build({ out: folder, preview: true, articleMetrics: true }), /metrics require production/);
-  await build({ out: join(folder,'production'), articleMetrics: true });
-  await assert.rejects(access(join(folder,'production',file)), { code: 'ENOENT' });
-  assert.doesNotMatch(await readFile(join(folder, 'production', 'sitemap.xml'), 'utf8'), /treenivihko-excel/);
-  await build({ out: join(folder,'fixtures'), preview: true, fixtures: true });
-  await assert.rejects(access(join(folder,'fixtures',file)), { code: 'ENOENT' });
-  const preview = join(folder, 'drafts');
-  const counts = await build({ out: preview, preview: true, drafts: true });
-  assert.equal(counts.drafts, 1);
-  const html = await checkHtml(preview, file, route);
-  assert.match(html, /<title>Treenivihko, Excel vai sovellus\? \| GymTracker<\/title>/);
-  assert.match(html, /Luonnos · vain esikatseluun/);
-  assert.match(html, /noindex, nofollow/);
-  assert.match(html, /Päivä ____ \| Liike ____/);
-  assert.ok(html.includes(play));
-  assert.doesNotMatch(html, /rel="canonical"|<time\b|BlogPosting|goatcounter/);
-  assert.doesNotMatch(await readFile(join(preview, 'sitemap.xml'), 'utf8'), /treenivihko-excel/);
-  assert.match(await readFile(join(preview, 'blog/index.html'), 'utf8'), /treenivihko-excel/);
+  const production = join(folder, 'production');
+  await build({ out: production, articleMetrics: true });
+  const html = await checkHtml(production, file, route);
+  assert.ok(html.includes('<title>Treenivihko, Excel vai sovellus? | GymTracker</title>'));
+  assert.ok(html.includes('href="https://gymtracker.fi' + route + '"'));
+  assert.ok(html.includes('<caption>Kolme tapaa kirjata treeni</caption>'));
+  assert.ok(html.includes('<th scope="row">Paperivihko</th>'));
+  assert.ok(html.includes('<pre class="example"><code>Päivä ____ | Liike ____'));
+  assert.ok(html.indexOf('href="' + play + '"') < html.indexOf('https://www.sisulift.app/'));
+  assert.ok(html.includes('treenikirjaus-vertailu.svg'));
+  assert.ok(html.includes('data-article-metrics="' + route + '" hidden'));
+  assert.doesNotMatch(html, /noindex|Luonnos|Testiartikkeli/);
+  const data = JSON.parse(html.split('<script type="application/ld+json">')[1].split('</script>')[0]);
+  assert.equal(data['@type'], 'BlogPosting');
+  assert.equal(data.mainEntityOfPage, 'https://gymtracker.fi' + route);
+  assert.match(data.datePublished, /^\d{4}-\d\d-\d\d$/);
+  assert.equal((await readFile(join(production,'sitemap.xml'), 'utf8')).split(route).length, 2);
+  assert.ok((await readFile(join(production,'index.html'), 'utf8')).includes('href="blog/" lang="fi">Blogi'));
+  assert.ok((await readFile(join(production,'blog/index.html'), 'utf8')).includes(route));
+  await assert.rejects(access(join(production, fixturePath)), { code: 'ENOENT' });
+  const preview = join(folder, 'preview');
+  await build({ out: preview, preview: true, fixtures: true, drafts: true });
+  const previewHtml = await checkHtml(preview, file, route);
+  assert.match(previewHtml, /noindex, nofollow/);
+  assert.doesNotMatch(previewHtml, /data-article-metrics|data-play-cta|article-metrics.js/);
+  await assert.rejects(access(join(preview,'blog/article-metrics.js')), { code: 'ENOENT' });
+});
+
+test('analytics sends a limited view and CTA only while explicit consent is active on the live origin', async () => {
+  const code = await readFile(new URL('content/article-metrics.js', source), 'utf8');
+  const route = '/blog/artikkeli/';
+  function client(origin, navigator = {}, pathname = route) {
+    const requests = [];
+    const button = { dataset: { allow:'Allow', stop:'Stop' }, attributes:{} };
+    const play = {};
+    for (const node of [button, play]) node.addEventListener = (name, listener) => { node[name] = listener; };
+    button.setAttribute = (name, value) => { button.attributes[name] = value; };
+    const panel = { hidden:true, dataset: { articleMetrics: route }, querySelector: () => button };
+    runInNewContext(code, { URL, navigator, location:{ origin, pathname, search:'?private=test' },
+      document:{ querySelector: selector => selector === '[data-article-metrics]' ? panel : play },
+      fetch: (url, options) => { requests.push([url, {...options}]); return Promise.resolve(); } });
+    return { requests, button, play, panel };
+  }
+  const { requests, button, play, panel } = client('https://gymtracker.fi');
+  assert.equal(panel.hidden, false);
+  play.click();
+  assert.equal(requests.length, 0);
+  button.click();
+  assert.equal(button.attributes['aria-pressed'], 'true');
+  play.click();
+  button.click();
+  play.click();
+  assert.equal(button.attributes['aria-pressed'], 'false');
+  button.click();
+  assert.equal(requests.length, 2);
+  assert.deepEqual(requests.map(([url]) => Object.fromEntries(url.searchParams)),
+    [{ p:route }, { p:'outbound/play' + route, e:'true' }]);
+  for (const [url, params] of requests) {
+    assert.equal(url.origin + url.pathname, 'https://gymtracker.goatcounter.com/count');
+    assert.equal(params.credentials, 'omit');
+    assert.equal(params.referrerPolicy, 'no-referrer');
+    assert.equal(params.keepalive, true);
+  }
+  for (const blocked of [client('http://localhost'), client('https://gymtracker.fi', { doNotTrack:'1' }),
+    client('https://gymtracker.fi', { globalPrivacyControl:true }), client('https://gymtracker.fi', {}, '/blog/other/')]) {
+    assert.equal(blocked.panel.hidden, true);
+    assert.equal(blocked.button.click, undefined);
+    assert.equal(blocked.requests.length, 0);
+  }
 });

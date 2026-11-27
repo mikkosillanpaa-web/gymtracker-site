@@ -22,7 +22,7 @@ function escape(value) {
 }
 
 const fields = ['content_id', 'version', 'status', 'language', 'market', 'slug', 'title',
-  'meta_title', 'description', 'category', 'published', 'updated', 'image', 'sections', 'links', 'sources', 'cta'];
+  'meta_title', 'description', 'category', 'published', 'updated', 'image', 'sections', 'links', 'sources', 'cta', 'article_metrics'];
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 const assetDirs = new Set(['changes', 'downloads', 'images', 'ohje', 'privacy']);
@@ -56,6 +56,15 @@ function validateLink(link, internal) {
     allowedLink(link.url, internal);
 }
 
+function validateTable(table) {
+  return table && Object.keys(table).every(key => ['caption', 'columns', 'rows'].includes(key)) &&
+    plain(table.caption, 120) && Array.isArray(table.columns) && table.columns.length >= 2 &&
+    table.columns.length <= 4 && table.columns.every(column => plain(column, 55)) &&
+    Array.isArray(table.rows) && table.rows.length > 0 && table.rows.length <= 12 &&
+    table.rows.every(row => Array.isArray(row) && row.length === table.columns.length &&
+      row.every(cell => plain(cell, 180)));
+}
+
 export function validateArticle(article, status, file) {
   if (!article || typeof article !== 'object' || Array.isArray(article)) throw Error(file + ': expected an object');
   const issue = message => { throw Error(file + ': ' + message); };
@@ -69,18 +78,22 @@ export function validateArticle(article, status, file) {
   if (!plain(article.title, 115) || !plain(article.description, 165) || !plain(article.category, 60) ||
       !plain(article.cta, 90)) issue('invalid title, description, category or CTA');
   if (article.meta_title !== undefined && !plain(article.meta_title, 70)) issue('invalid meta title');
+  if (article.article_metrics !== undefined && typeof article.article_metrics !== 'boolean') issue('invalid article metrics setting');
   if (!date(article.updated) || (status === 'draft' ? article.published !== null
     : !date(article.published) || article.updated < article.published)) issue('invalid date');
   if (!Array.isArray(article.sections) || !article.sections.length || article.sections.length > 40 ||
-      !article.sections.every(section => section && Object.keys(section).length === 2 &&
+      !article.sections.every(section => section &&
+        Object.keys(section).every(key => ['heading', 'paragraphs', 'table', 'example'].includes(key)) &&
         plain(section.heading, 140) && Array.isArray(section.paragraphs) && section.paragraphs.length &&
-        section.paragraphs.every(paragraph => plain(paragraph, 6000)))) issue('invalid body');
+        section.paragraphs.every(paragraph => plain(paragraph, 6000)) &&
+        (section.table === undefined || validateTable(section.table)) &&
+        (section.example === undefined || plain(section.example, 1200)))) issue('invalid body');
   if (!Array.isArray(article.links) || !article.links.every(link => validateLink(link, true)) ||
       !Array.isArray(article.sources) || !article.sources.length ||
       !article.sources.every(link => validateLink(link, false))) issue('invalid links or missing sources');
   if (article.image !== null && (!article.image || Object.keys(article.image).length !== 2 ||
       !plain(article.image.alt, 240) || typeof article.image.path !== 'string' ||
-      !/^\/(?:images|ohje\/assets|blog\/media)\/[a-z0-9][a-z0-9._/-]*\.(?:webp|png|jpe?g)$/i.test(article.image.path) ||
+      !/^\/(?:images|ohje\/assets|blog\/media)\/[a-z0-9][a-z0-9._/-]*\.(?:webp|png|jpe?g|svg)$/i.test(article.image.path) ||
       new URL(article.image.path, origin).pathname !== article.image.path)) issue('invalid image or alt text');
   return article;
 }
@@ -103,7 +116,7 @@ function makeLayout({ language, title, description, path, body, preview, alterna
   const url = path && origin + path;
   const alternateLinks = alternates.length > 1 ? alternates.map(([lang, route]) =>
     '<link rel="alternate" hreflang="' + lang + '" href="' + origin + route + '">').join('\n') : '';
-  const socialImage = image ?? '/images/ic_GymApp.png';
+  const socialImage = image && !image.endsWith('.svg') ? image : '/images/ic_GymApp.png';
   const jsonLd = data ? '<script type="application/ld+json">' +
     JSON.stringify(data).replaceAll('<', '\\u003c') + '</script>' : '';
   return '<!doctype html>\n<html lang="' + language + '"><head><meta charset="utf-8">\n' +
@@ -148,18 +161,52 @@ function linkList(title, links) {
     escape(link.url) + '">' + escape(link.label) + '</a></li>').join('') + '</ul></section>';
 }
 
+function renderTable(table) {
+  if (!table) return '';
+  return '<table class="comparison"><caption>' + escape(table.caption) + '</caption><thead><tr>' +
+    table.columns.map(column => '<th scope="col">' + escape(column) + '</th>').join('') + '</tr></thead><tbody>' +
+    table.rows.map(([label, ...cells]) => '<tr><th scope="row">' + escape(label) + '</th>' +
+      cells.map(cell => '<td>' + escape(cell) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+}
+
+function renderSections(sections) {
+  return sections.map(section => {
+    const paragraphs = section.paragraphs.map(p => '<p>' + escape(p) + '</p>');
+    const example = section.example ? '<pre class="example"><code>' + escape(section.example) + '</code></pre>' : '';
+    return '<section><h2>' + escape(section.heading) + '</h2>' + paragraphs[0] + example +
+      paragraphs.slice(1).join('') + renderTable(section.table) + '</section>';
+  }).join('');
+}
+
+function metricsNotice(language, path) {
+  const fi = language === 'fi';
+  const label = fi ? 'Artikkelin kävijämittaus' : 'Article analytics';
+  const allow = fi ? 'Salli mittaus' : 'Allow analytics';
+  const stop = fi ? 'Lopeta mittaus' : 'Stop analytics';
+  const body = fi
+    ? 'Voit sallia GoatCounter-mittauksen tällä sivulla. Se laskee sivukäynnin ja Google Play -painikkeen klikkaukset. Mittaus on vapaaehtoista. Valinta nollautuu, kun avaat sivun uudelleen.'
+    : 'You can allow GoatCounter analytics on this page to count the page view and Google Play button clicks. Analytics is optional. Your choice resets when you reopen the page.';
+  const details = fi
+    ? 'Lähetämme artikkelin osoitepolun ja klikkitapahtuman. Selain välittää IP-osoitteen ja tavanomaiset yhteystiedot teknisesti. Mittauksessa ei käytetä evästeitä tai selainmuistia. Donturex Development vastaa mittauksesta. Yhteys'
+    : 'We send the article path and click event. The browser sends the IP address and standard connection information. Analytics uses no cookies or browser storage. Donturex Development is responsible for analytics. Contact';
+  return '<section class="measurement" data-article-metrics="' + path + '" hidden><h2>' + label +
+    '</h2><p>' + body + '</p><p>' + details + ' <a href="mailto:gymtracker@donturexdev.fi">gymtracker@donturexdev.fi</a>. ' +
+    '<a href="https://www.goatcounter.com/help/privacy">' + (fi ? 'GoatCounterin tietosuojakuvaus' : 'GoatCounter privacy policy') +
+    '</a>.</p><button type="button" data-allow="' + allow + '" data-stop="' + stop + '" aria-pressed="false">' + allow +
+    '</button></section>';
+}
+
 function renderArticle(article, alternates, preview, articleMetrics) {
   const language = article.language;
   const copy = translations[language];
-  const sections = article.sections.map(section => '<section><h2>' + escape(section.heading) +
-    '</h2>' + section.paragraphs.map(p => '<p>' + escape(p) + '</p>').join('') + '</section>').join('');
+  const sections = renderSections(article.sections);
   const figure = article.image ? '<figure><img src="' + escape(article.image.path) + '" alt="' +
     escape(article.image.alt) + '" decoding="async"></figure>' : '';
   const dates = article.status === 'draft' ? '' : ' · ' + dateLabel(article.published, language) +
     (article.updated === article.published ? '' : ' · ' + copy.updated + ' ' + dateLabel(article.updated, language));
   const path = articlePath(article);
-  const metrics = articleMetrics && !preview && article.status === 'published';
-  const analytics = metrics ? '<script data-goatcounter="https://gymtracker.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>' : '';
+  const metrics = articleMetrics && !preview && article.status === 'published' && article.article_metrics === true;
+  const analytics = metrics ? '<script defer src="/blog/article-metrics.js"></script>' : '';
   const data = article.status === 'published' ? {
     '@context': 'https://schema.org', '@type': 'BlogPosting', mainEntityOfPage: origin + path,
     headline: article.title, description: article.description, inLanguage: language,
@@ -172,8 +219,9 @@ function renderArticle(article, alternates, preview, articleMetrics) {
     body: '<article class="prose">' + (article.status !== 'published' ? '<p class="fixture">' + copy[article.status] + '</p>' : '') +
       '<p class="meta">' + escape(article.category) + dates + '</p><h1>' + escape(article.title) +
       '</h1><p class="lead">' + escape(article.description) + '</p>' + figure + sections +
-      linkList(copy.related, article.links) + linkList(copy.source, article.sources) +
-      '<p><a class="cta" href="' + play + '"' + (metrics ? ' data-goatcounter-click="outbound/play' + path + '"' : '') + '>' + escape(article.cta) + '</a></p></article>' });
+      '<p><a class="cta" href="' + play + '"' + (metrics ? ' data-play-cta' : '') + '>' + escape(article.cta) + '</a></p>' +
+      linkList(copy.related, article.links) + linkList(copy.source, article.sources) + '</article>' +
+      (metrics ? metricsNotice(language, path) : '') });
 }
 
 async function output(out, path, content) {
@@ -235,6 +283,9 @@ export async function build({ source = root, out = join(root, 'dist'), preview =
   }
   await mkdir(join(out, 'blog'), { recursive: true });
   await cp(join(source, 'content/style.css'), join(out, 'blog/style.css'));
+  if (articleMetrics && published.some(article => article.article_metrics === true)) {
+    await cp(join(source, 'content/article-metrics.js'), join(out, 'blog/article-metrics.js'));
+  }
   const languages = ['fi', ...Object.keys(translations).filter(l => l !== 'fi' && articles.some(a => a.language === l))];
   const lists = languages.map(language => [language, languagePath(language)]);
   for (const language of languages) {

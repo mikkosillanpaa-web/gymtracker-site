@@ -1,52 +1,48 @@
-# Ensimmäisen blogiartikkelin katselmointi
+# Ensimmäinen blogiartikkeli
 
-**Artikkeli** · Treenivihko, Excel vai treenisovellus? Kokeile kahden treenin testiä.
+**Treenivihko, Excel vai treenisovellus? Kokeile kahden treenin testiä.**
+on [julkaistussa sisältöpaketissa](../content/articles/treenivihko-excel-vai-treenisovellus.json).
+Aihe tuli Growthin toisesta AI-tutkimuspilotista. Codex tarkasti lähteen
+toimituksellisesti ja kirjoitti luonnoksen. Riski on matala. Mallimerkinnässä
+on täytettävät kentät. Play-linkki osoittaa listaukseen ilman tuoteväitteitä.
 
-**Osoite** · `/blog/treenivihko-excel-vai-treenisovellus/`
+Artikkelissa on oma [SVG-kuvitus](../content/media/treenikirjaus-vertailu.svg).
+Puhelin on yleisluontoinen. SVG näkyy artikkelissa ja GymTrackerin PNG
+somekortissa. Taulukko ja mallimerkintä ovat valinnaisia kenttiä.
+Paikallinen esikatselu syntyy komennolla `node tools/build.mjs --preview`.
 
-**Alkuperä** · Aihe tuli toisesta Growthin AI-tutkimuspilotista ja
-lähde tarkistettiin toimituksellisesti. Codex kirjoitti ja viimeisteli
-luonnoksen. Tämä toimitus ei todenna Growthin WriterAdapterin käyttöä.
+## Kävijämittaus
 
-**Riskiluokka** · Matala. Sisältö opastaa vertaamaan kirjausvälineitä.
-Mallimerkinnässä on vain täytettävät kentät, ja Google Play -linkki
-viittaa GymTrackerin listaukseen ilman ominaisuus- tai versioväitteitä.
+Julkaisuputken `--article-metrics` ja sisältöpaketin `article_metrics: true`
+ottavat mittaustoiminnon käyttöön. Mittauspyynnöt voivat lähteä vain tuotanto-
+osoitteesta ja kävijän nimenomaisen valinnan jälkeen. Valinnan voi peruuttaa
+samalla sivulla. Artikkeli ja Play-linkki toimivat ilman mittausta. Valinta on
+voimassa vain kyseisellä sivulatauksella. DNT ja GPC estävät mittauksen.
+Esikatselu ja CI:n normaalibuild eivät sisällä artikkelimittausta.
 
-**Kuvitusehdotus** · Oma valokuva tai kuvitus, jossa ovat saman pöydän
-päällä tyhjä ruutuvihko, taulukkopohja ja puhelin, jonka näkymä on
-neutraali ja tunnukseton. Kuvassa ei tarvita henkilöitä tai kilpailijoiden
-materiaaleja. Alt-teksti on *Ruutuvihko, taulukko ja puhelin valmiina
-saman treenimerkinnän kokeiluun*. Luonnoksen kuva on valinnainen ja
-`image` on tyhjä. Tarkista käyttöoikeus ennen kuvan lisäämistä.
+Artikkeli kertoo rekisterinpitäjän, tarkoituksen, valinnaisuuden, tiedot ja
+GoatCounterin tietosuojakuvauksen. Sovelluksen oma tietosuojateksti käsittelee
+Android- ja Wear-sovelluksia. Mittaus lähettää nykyiseen GoatCounteriin vain
+kiinteän reitin tai tapahtuman nimen ja tapahtumamerkinnän. Selain välittää
+tavalliset yhteystiedot, kuten IP- ja selainotsakkeet. Mittaus ei lähetä
+viittaavaa sivua, URL-parametreja, evästeitä, näyttötietoja, käyttäjätunnuksia
+tai treenitietoja. GoatCounter kuvaa tilapäisen käsittelyn ja koontitiedot
+omassa tietosuojakuvauksessaan.
 
-Sisältöpaketti on `content/drafts/`-hakemistossa. Paikallinen esikatselu
-rakennetaan ajamalla `node tools/build.mjs --preview --drafts` ja
-tarjoamalla `dist` paikallisesti. Luonnos näkyy esikatselun blogilistassa
-ilman julkaisu- tai päivityspäivän esitystä, canonicalia, indeksointia,
-BlogPosting-dataa tai mittausta. Normaali build jättää sen pois.
-Julkaisuhetkellä hyväksytty paketti siirretään `content/articles/`-hakemistoon,
-tila vaihdetaan arvoon `published` ja asetetaan oikea julkaisupäivä.
-
-## Mittausvalmius #10
-
-| Mittari | Lähde ja rajaus |
+| Mittari | Lähde |
 |---|---|
-| Artikkelin sivukäynnit | GoatCounter, tarkka artikkelireitti. Uusi blogiartikkeli saa seurantaskriptin vain erikseen hyväksytyllä `--article-metrics`-tuotantobuildilla. |
-| Play-linkin klikkaukset | GoatCounter-tapahtuma `outbound/play/blog/treenivihko-excel-vai-treenisovellus/`. Lasketaan artikkelin CTA-klikkaukset. |
-| Google-hakunäyttökerrat ja hakuklikkaukset | Search Consolen domain-resurssi `gymtracker.fi`, Performance/Pages, täsmällinen canonical-URL ja Web-haku. Tarkista indeksointi ensin. Tarkastele viikoittain ja vertaa 28 päivän jaksolla. |
-| Myöhempi liikenne Play-asennuksiin | Hyväksynnän jälkeen harkitaan artikkelikohtaista `utm_source=gymtrackerfi`- ja `utm_campaign=blog_treenivihko`-tunnistetta. Tarkista Play Consolesta UTM-suodattimilla listauskävijät ja store listing acquisitions koontitasolla. Pienet määrät voivat näkyä Other-ryhmässä. |
+| Artikkelin sivukäynnit | GoatCounter, artikkelin osoitepolku, mittauksen sallineet käynnit |
+| Play-linkin klikkaukset | GoatCounter, `outbound/play/blog/treenivihko-excel-vai-treenisovellus/` |
+| Hakunäyttökerrat ja hakuklikkaukset | Search Console, Web-haku ja artikkelin canonical-osoite |
+| Mahdolliset myöhemmät Play-hankinnat | Play Consolen UTM-koosteet, jos kampanjamerkintä otetaan käyttöön |
 
-Klikkaus, listauskäynti ja Playn ilmoittama hankinta ovat eri mittareita.
-GoatCounter-havainnot voivat puuttua estojen ja selainten rajoitusten vuoksi.
-Raportoi raakaluvut sekä ajanjakso. Puuttuva GSC- tai Play-data merkitään
-saatavuustiedoksi. Mittauskokeilu tarvitsee oman käyttöönoton ja yhden
-valvotun päästä päähän -tarkistuksen ennen tulosten käyttämistä.
+Klikkaus, Play-listauskäynti ja Playn ilmoittama hankinta ovat eri mittareita.
+Kirjaa ajanjakso ja havaintojen kattavuus. Puuttuva havainto merkitään
+saatavuustiedoksi. Tuotannon mittaustestin tapahtumat kirjataan yksityiseen
+Growth-julkaisutositteeseen.
 
-`--article-metrics` toimii vain julkaistuilla artikkeleilla, eikä se ole
-käytössä nykyisessä GitHub Actions -julkaisussa. Esikatselu ja mittauslippu
-ovat keskenään poissulkevia. Google Play -linkki käyttää nykyistä listausosoitetta.
-
-[Lähteet artikkelin paketissa](../content/drafts/treenivihko-excel-vai-treenisovellus.json) ·
-[GoatCounterin tapahtumat](https://www.goatcounter.com/help/events) ·
-[Search Console Performance](https://support.google.com/webmasters/answer/7576553) ·
-[Play Consolen hankintaraportit](https://support.google.com/googleplay/android-developer/answer/9859173).
+[GoatCounterin tietosuoja](https://www.goatcounter.com/help/privacy) ·
+[GoatCounterin mittausrajapinta](https://www.goatcounter.com/help/pixel) ·
+[Traficomin evästeohje](https://www.traficom.fi/sites/default/files/media/file/Ev%C3%A4steohjeistus_palveluntarjoajille.pdf) ·
+[Search Console](https://support.google.com/webmasters/answer/7576553) ·
+[Play-hankintaraportit](https://support.google.com/googleplay/android-developer/answer/9859173)

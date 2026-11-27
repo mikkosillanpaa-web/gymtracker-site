@@ -26,3 +26,14 @@ figure figcaption{color:var(--muted);font-size:.9rem;margin-top:.6rem}
 footer{border-top:1px solid var(--line);padding-block:1.2rem;color:var(--muted)}
 .skip{position:absolute;left:.75rem;top:-10rem}
 .skip:focus{top:.5rem;background:var(--bg);padding:.45rem;z-index:1}
+
+.comparison{width:100%;table-layout:fixed;border-collapse:collapse;margin:1.4rem 0;font-size:.95rem}
+.comparison caption{text-align:left;font-weight:750;margin-bottom:.45rem}
+.comparison th,.comparison td{text-align:left;vertical-align:top;padding:.5rem .4rem;border-bottom:1px solid var(--line)}
+.comparison thead{background:var(--panel)}
+@media(max-width:26rem){.comparison{font-size:.81rem}.comparison th,.comparison td{padding:.4rem .25rem}}
+.example{margin:1rem 0;padding:.85rem 1rem;background:var(--panel);border:1px solid var(--line);border-inline-start:3px solid var(--accent);border-radius:.55rem;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
+.measurement{max-width:68ch;margin:2.5rem auto 0;color:var(--muted);border-top:1px solid var(--line)}
+.measurement h2{font-size:1.1rem}
+.measurement button{font:inherit;border:1px solid var(--line);border-radius:.4rem;color:var(--ink);background:var(--panel);padding:.4rem .75rem;cursor:pointer}
+.measurement button:focus-visible{outline:2px solid #c4aaff;outline-offset:.2rem}
