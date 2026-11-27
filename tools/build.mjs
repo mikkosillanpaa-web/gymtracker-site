@@ -106,7 +106,10 @@ function articlePath(article) {
 }
 
 async function readArticles(directory, status) {
-  const names = await readdir(directory);
+  const names = await readdir(directory).catch(error => {
+    if (status === 'draft' && error.code === 'ENOENT') return [];
+    throw error;
+  });
   return Promise.all(names.filter(name => name.endsWith('.json')).sort().map(async name =>
     validateArticle(JSON.parse(await readFile(join(directory, name), 'utf8')), status, name)));
 }
